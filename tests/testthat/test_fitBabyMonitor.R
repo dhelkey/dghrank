@@ -68,4 +68,12 @@ test_that('subset works',{
   expect_true(TRUE)
 })
 
+test_that('effect and score z-scores are the same',{
+  data("neonatal")
+  minimal_data = neonatal[ , c('outcome2', 'instid',
+                               'male','outborn', 'csect')]
+  r=fitBabyMonitor(minimal_data, 3,0)
+  m = r$inst_mat
+  expect_equal(mean(m$effect_z - m$score_z),0)
+})
 

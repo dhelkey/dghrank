@@ -30,7 +30,7 @@ linCholSolver = function(R, y){
 	return(
 		data.frame( score_est = est, 
 	score_lower = est - z_star * s, score_upper = est + z_star * s,
-	effect_s = s, score_z = est/s )
+	score_s = s, score_z = summary_dat$effect_z )
 	)		
   }
   
