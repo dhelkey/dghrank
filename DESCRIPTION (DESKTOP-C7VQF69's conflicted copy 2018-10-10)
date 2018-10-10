@@ -1,0 +1,23 @@
+Package: dhgrank
+Title: Construct Draper-Gittoes-Helkey Rankings of Institutions
+Version: 1.0
+Authors@R: c(person("Daniel", "Helkey", email = "dhelkey@ucsc.edu",
+                  role = c("aut", "cre")),
+				person("Daniel", "Kirsner", role = "aut"),
+				person("David", "Draper", role = "ctb"),
+				person("Jessica", "Liu", role = "ctb"))
+Description: Provides functions for ranking institions with respect to binary outcome performance. Rankings are computed according to Draper-Gittoes-Helkey (2018), extending Draper-Gittoes (2004) methodology. Functions are also provided
+to generate composite scores from multiple performance indicators. Main function intended for CPQCC/VON usage, but general-purpose functions are provided for Bayesian linear and probit regression.
+Depends: R (>= 3.1.0)
+License: MIT + file LICENSE
+LazyData: true
+Imports:
+    Matrix,
+    truncnorm,
+  	methods
+Suggests:
+	ggplot2,
+    testthat,
+	MASS,
+	sas7bdat
+RoxygenNote: 6.0.1

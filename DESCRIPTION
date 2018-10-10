@@ -1,11 +1,25 @@
-Package: dghrank
-Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
-Encoding: UTF-8
+Package: dhgrank
+Title: Construct Draper-Gittoes Rankings of Institutions
+Version: 1.0
+Authors@R: c(person("Daniel", "Helkey", email = "dhelkey@ucsc.edu",
+                  role = c("aut", "cre")),
+				person("Daniel", "Kirsner", role = "aut"),
+				person("David", "Draper", role = "ctb"),
+				person("Jessica", "Liu", role = "ctb"))
+Description: Provides functions for ranking institions with respect to binary outcome performance. 
+    Rankings are computed according to Draper-Gittoes-Helkey (2018), which extends Draper-Gittoes (2004) methodology. Functions are provided
+		to generate composite scores. Main function intended for CPQCC/VON usage, but fast functions are
+		provided for Bayesian linear and probit regression.
+Depends: R (>= 3.1.0)
+License: MIT + file LICENSE
 LazyData: true
+Imports:
+    Matrix,
+    truncnorm,
+  	methods
+Suggests:
+	ggplot2,
+    testthat,
+	MASS,
+	sas7bdat
+RoxygenNote: 6.0.1
