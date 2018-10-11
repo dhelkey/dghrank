@@ -10,7 +10,7 @@ subset = FALSE
 iters = 1000
 burn_in = 10
 r=fitBabyMonitor(minimal_data, num_cat,num_cont)
-dat = processMinimalData(minimal_data, num_cat, num_cont)
+dat = parseMinimalData(minimal_data, num_cat, num_cont)
 dg = designBased(0.5, dat$y, r$pcf_vec, dat$inst_vec)
 
 

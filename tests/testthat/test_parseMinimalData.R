@@ -27,9 +27,9 @@ na_cont = sum(na_count_vec[c('ap5','gaweeks')])
 minimal_data_clean = minimal_data[complete.cases(minimal_data), ]
 
 pm = function(x = minimal_data, ...){
-  #Wrapper for processMinimalData to make testing easier
+  #Wrapper for parseMinimalData to make testing easier
   #Set to remove no NA values
-  processMinimalData(x, num_cat, num_cont, verbose = FALSE, ...)
+  parseMinimalData(x, num_cat, num_cont, ...)
 }
 
 test_that('The options to remove NA values work',{
@@ -46,7 +46,7 @@ test_that('The options to remove NA values work',{
   expect_equivalent( sum(pm(cat.na = 'category')$cat_var_mat$male == '99'), 1)
 })
 
-test_that('processMinimalData should never* NA values',{ #with the exception of 'NA' category for categorical variables, if desired
+test_that('parseMinimalData should never* NA values',{ #with the exception of 'NA' category for categorical variables, if desired
   expect_equal(sum(is.na(pm()$y)), 0)
   expect_equal(sum(is.na(pm()$cont_var_mat)), 0)
   expect_equal(sum(is.na(pm()$cat_var_mat)), 0)
@@ -55,7 +55,7 @@ test_that('processMinimalData should never* NA values',{ #with the exception of 
   expect_equal(sum(is.na(pm(cont.na = 'remove')$cont_var_mat)), 0)
 })
 
-test_that('processMinimalData returns the right values',{
+test_that('parseMinimalData returns the right values',{
   expect_match( pm()$indicator_name, 'outcome1')
   expect_equivalent( dim(pm()$cont_var_mat)[1], dim(pm()$cat_var_mat)[1])
   expect_equivalent( dim(pm(cont.na = 'remove')$cont_var_mat)[1], dim(pm(cont.na = 'remove')$cat_var_mat)[1])
@@ -74,7 +74,7 @@ test_that('y, inst_vec, cat_var_mat, and cont_var_mat all have the same length i
 })
 
 p = function(minimal_data, num_cat, num_cont,...){
-  processMinimalData(minimal_data, num_cat, num_cont, verbose = FALSE,...)
+  parseMinimalData(minimal_data, num_cat, num_cont, verbose = FALSE,...)
 }
 
 test_that('No covariates',{

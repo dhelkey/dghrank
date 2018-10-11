@@ -58,7 +58,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	#'
 	#'		model_matrix: Design matrix
   
-  dat = processMinimalData(minimal_data, num_cat, num_cont,
+  dat = parseMinimalData(minimal_data, num_cat, num_cont,
                                       subset = subset, outcome.na = outcome.na, subset.na = subset.na, cat.na = cat.na, cont.na = cont.na)  								 
 	pcf_vec = NULL
 	if (!is.null(dat$cat_var_mat)){
@@ -143,7 +143,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 }
 
   return(list(
-    dat = dat, #The parsed input, output of processMinimalData()
+    dat = dat, #The parsed input, output of parseMinimalData()
   	pcf_vec = pcf_vec, #Useful for computing D-G rankings
     inst_mat = inst_mat,
 	full_subset_mat_nobaseline = subset_mat,

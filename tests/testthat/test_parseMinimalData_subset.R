@@ -13,7 +13,7 @@ N_full = dim(minimal_data)[1]
 
 
 pm = function(minimal_data, ...){
-  processMinimalData(minimal_data, num_cat, num_cont, subset = TRUE,...)
+  parseMinimalData(minimal_data, num_cat, num_cont, subset = TRUE,...)
 }
 
 

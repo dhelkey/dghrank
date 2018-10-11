@@ -1,5 +1,5 @@
-processMinimalData = function(minimal_data, num_cat, num_cont, subset = FALSE,
-		verbose = TRUE, 
+parseMinimalData = function(minimal_data, num_cat, num_cont, subset = FALSE,
+		verbose = FALSE, 
 		outcome.na = 'set0', 
 		subset.na = 'category', 
 		cat.na = 'category', 

@@ -3,7 +3,7 @@ context('partitionSummary')
 #Set up data
 data("neonatal")
 minimal_data = neonatal[ ,c('outcome1', 'instid','subset', 'male', 'ap5')]
-r = processMinimalData(minimal_data, 1,1, subset=TRUE)
+r = parseMinimalData(minimal_data, 1,1, subset=TRUE)
 
 test_that('Verify results w/ single partitioning vector',{
   s = partitionSummary(r$y, r$inst_vec)
