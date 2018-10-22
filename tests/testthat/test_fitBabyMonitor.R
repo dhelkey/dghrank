@@ -77,3 +77,18 @@ test_that('effect and score z-scores are the same',{
   expect_equal(mean(m$effect_z - m$score_z),0)
 })
 
+
+
+test_that('names for output data.frames work as expected',{
+    minimal_data = neonatal[ ,c('outcome1', 'instid', 'subset', 'male', 'csect', 'cont1')]
+    r = fitBabyMonitor(minimal_data, 2, 1, subset = TRUE)
+    expect_equal(names(r$inst_mat)[1], 'inst')
+    expect_equal(names(r$subset_nobaseline_mat)[1:2], c('inst','subset'))
+    expect_equal(names(r$subset_baseline_mat)[1:2], c('inst','subset'))
+    expect_equal(names(r$full_subset_mat_nobaseline)[1], 'subset')
+    expect_equal(names(r$full_subset_mat_nobaseline)[1], 'subset')
+})
+
+
+##TODO - test that we get the same results (we should)
+# w/ subset vs nonsubset data...

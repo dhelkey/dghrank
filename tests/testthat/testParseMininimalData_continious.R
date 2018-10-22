@@ -21,5 +21,10 @@ test_that('returns the values we expect for a continious variable', {
   #Instead, remove Na or NaN values
   expect_true( length(pm()$y) > length(pm(outcome.na = 'remove')))
   expect_equivalent(pm(outcome.na = 'remove')$y, y[complete.cases(y)])
-})
 
+  #Ensure no NA values in output
+  p = pm()
+  expect_true( all( complete.cases(p$y, p$cat_var_mat, p$cont_var_mat)))
+
+  p = pm(outcome.na = 'remove')
+  expect_true( all( complete.cases(p$y, p$cat_var_mat, p$cont_var_mat)))})

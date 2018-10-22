@@ -58,6 +58,12 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	#'
 	#'		model_matrix: Design matrix
   
+  ###TODO fix this, NaN showing up in levels (e.g. ap5). It should be '99' or string Na, or something, not NaN
+  #TODO - remove '.' characters in variables, just in case this causes
+  #any problems anywyere
+  #TODO add documentation everywhere
+  
+  
   dat = parseMinimalData(minimal_data, num_cat, num_cont,
                                       subset = subset, outcome.na = outcome.na, subset.na = subset.na, cat.na = cat.na, cont.na = cont.na)  								 
 	pcf_vec = NULL
@@ -69,7 +75,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
   p_inst = partitionSummary(dat$y, dat$inst_vec)
   p_subset = partitionSummary(dat$y, dat$subset)
   p_inst_subset = NULL
-  if (subset){p_inst_subset = partitionSummary(dat$y, dat$inst, dat$subset)} #To save time, don't always compute
+  if (subset){p_inst_subset = partitionSummary(dat$y, dat$inst, dat$subset_vec)} #To save time, don't always compute
 
   #Build model additively
   model_mat_cat = modelMatrix(dat$cat_var_mat, interactions = TRUE)
@@ -119,11 +125,12 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
   subset_inst_mat = summaryMat(p_inst_subset, subset_inst_effects)
 
 
-  
 	inst_mat = cbind(inst_mat, toScore(inst_mat, dat$z_star))
+	names(inst_mat)[1] = 'inst'
 	subset_mat_baseline = subset_inst_mat_baseline = NULL
   if(subset){
 	  subset_mat = cbind(subset_mat, toScore(subset_mat, dat$z_star))
+	  names(subset_mat)[1] = 'subset'
 	  subset_inst_mat = cbind(subset_inst_mat, toScore(subset_inst_mat,dat$z_star))
 	  
 	  ##Finally, add in the baseline #TODO fix this hard-coding
@@ -131,7 +138,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	  #Subset baseline coding
 		toBaseline(subset_mat$effect_est, subset_mat$effect_s, dat$z_star))
 	  
-		#Subset-inst baseline coding
+	#Subset-inst baseline coding
 	   temp_baseline_mat = data.frame()
 	   for(i in unique(subset_inst_mat[ ,1])){
 		indices = subset_inst_mat[ ,1] == i
@@ -139,7 +146,9 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 		temp_baseline_mat = rbind(temp_baseline_mat,
 			inst_specific)
 	   }
+	   names(subset_inst_mat)[1:2] = c('inst', 'subset')
 	   subset_inst_mat_baseline = cbind( subset_inst_mat[ ,1:4], temp_baseline_mat)	  
+
 }
 
   return(list(
