@@ -40,13 +40,13 @@ scoreComposite = function(returner_list, alpha = 0.05, type = 'inst'){
 		out_mat$score_est[indices] = apply(
 			cbind(out_mat$score_est[indices], r[[mat]]$score_est), 
 				1, sum, na.rm = TRUE)
-		out_mat$score_s[indices] = sqrt(out_mat$score_s[indices]^2 
-			+ r[[mat]]$score_s^2)
+		out_mat$score_s[indices] = out_mat$score_s[indices]^2 
+			+ r[[mat]]$score_s^2
 		out_mat$n[indices] = out_mat$n[indices] + 1
 	 }
 	#Compute composite mean and SD
 	out_mat$score_est = out_mat$score_est / out_mat$n
-	out_mat$score_s = out_mat$score_s / sqrt(out_mat$n)
+	out_mat$score_s = sqrt(out_mat$score_s / out_mat$n)
 	
 	names(out_mat)[1:length(id_cols)] = id_cols
 	z_star = qnorm(1 - alpha/length(id_vec))
