@@ -57,19 +57,22 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	#'		prior_var_vec: Vector of prior variances for each coefficient
 	#'
 	#'		model_matrix: Design matrix
-  
+
   ###TODO fix this, NaN showing up in levels (e.g. ap5). It should be '99' or string Na, or something, not NaN
   #TODO - remove '.' characters in variables, just in case this causes
   #any problems anywyere
-  #TODO add documentation everywhere
-  
-  
+  #TODO add documentation everywhere, including datasets
+  ##EMAIL jochen about includuing data in the package dump
+#TODO add the fix that Lucy made
+  #TODO fix sparse matrices (will probably need to add something w/ namespaces)
+#TODO pre-release tests should also include dowloading from github and ensuring it runs as intended
+
   dat = parseMinimalData(minimal_data, num_cat, num_cont,
-                                      subset = subset, outcome.na = outcome.na, subset.na = subset.na, cat.na = cat.na, cont.na = cont.na)  								 
+                                      subset = subset, outcome.na = outcome.na, subset.na = subset.na, cat.na = cat.na, cont.na = cont.na)
 	pcf_vec = NULL
 	if (!is.null(dat$cat_var_mat)){
 	  pcf_vec = apply(dat$cat_var_mat, 1, paste, collapse = '-') #For DG ranking
-	}	
+	}
 
   #Partition data by institution, subset, and institution-subset
   p_inst = partitionSummary(dat$y, dat$inst_vec)
@@ -91,7 +94,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
   mcmc_iters = probitFit(dat$y, model_mat, prior_var_vec,
                          iters = iters + burn_in)[-(1:burn_in),  ]
 
-  #Large matrix to compute and store, 
+  #Large matrix to compute and store,
   #TODO avoid computing this
   #TODO get the namespace working so we can do this multiplication as a spase matrix
   p_i_mat = pnorm(tcrossprod(as.matrix(model_mat), mcmc_iters))
@@ -110,7 +113,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
   subset_effects  = dghRank(dat$y, p_i_vec, p_i_overall_var_vec, p_subset$ind_mat, dat$z_star)
   subset_inst_effects = dghRank(dat$y, p_i_vec, p_i_overall_var_vec, p_inst_subset$ind_mat, dat$z_star)
 
-  
+
   #Build human readable data.frames
   summaryMat = function(part_dat, dgh_dat){
     #Build summary mat
@@ -132,12 +135,12 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	  subset_mat = cbind(subset_mat, toScore(subset_mat, dat$z_star))
 	  names(subset_mat)[1] = 'subset'
 	  subset_inst_mat = cbind(subset_inst_mat, toScore(subset_inst_mat,dat$z_star))
-	  
+
 	  ##Finally, add in the baseline #TODO fix this hard-coding
 	  subset_mat_baseline = cbind( subset_mat[ ,1:3],
 	  #Subset baseline coding
 		toBaseline(subset_mat$effect_est, subset_mat$effect_s, dat$z_star))
-	  
+
 	#Subset-inst baseline coding
 	   temp_baseline_mat = data.frame()
 	   for(i in unique(subset_inst_mat[ ,1])){
@@ -147,7 +150,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 			inst_specific)
 	   }
 	   names(subset_inst_mat)[1:2] = c('inst', 'subset')
-	   subset_inst_mat_baseline = cbind( subset_inst_mat[ ,1:4], temp_baseline_mat)	  
+	   subset_inst_mat_baseline = cbind( subset_inst_mat[ ,1:4], temp_baseline_mat)
 
 }
 

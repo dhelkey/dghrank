@@ -1,4 +1,4 @@
 library(testthat)
-library(dgrank)
+library(dghrank)
 
-test_check("dgrank")
+test_check("dghrank")
