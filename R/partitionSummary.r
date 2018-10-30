@@ -18,6 +18,8 @@ if (is.null(part1)){return(NULL)}
    stopifnot(length(part1) == length(part2))
    part2 = as.factor(part2)
    }
+   
+
 
   #If two partition vectors specified, run through data
   # and list all combinations of levels (e.g. inst-subst)
@@ -28,11 +30,11 @@ if (is.null(part1)){return(NULL)}
     for (p1 in levels(part1)){
       p2_vec = sort(unique(part2[part1==p1]))
       part_mat = rbind(part_mat,
-                       cbind(p1, p2_vec))
+                       cbind(p1, as.character(p2_vec)))
     }
     names(part_mat) = c(names(part1), names(part2))
   }
-
+  
   #vector partition levels of length q
   if (is.null(part2)){
     levels_out = levels(part1)
@@ -44,10 +46,11 @@ if (is.null(part1)){return(NULL)}
   if (is.null(part2)){
     part_vec = part1
   } else {
-    part_vec = factor(apply(cbind(part1,part2), 1, paste, collapse = '-'),
+    part_vec = factor(apply(cbind(as.character(part1),as.character(part2)), 1, paste, collapse = '-'),
 		levels = levels_out) #Need to manually set levels or the order changes
   }
-
+  v_mat = cbind(as.character(part1),as.character(part2))
+ 
   #Extract variables
   q = length(levels_out)
   n = length(outcome)
@@ -57,6 +60,7 @@ if (is.null(part1)){return(NULL)}
   #Useful for a lot of linear algebra shortcuts
   #ex: o_mean =  t(ind_mat) %*% ind_mat / n_vec
   ind_mat = Matrix::Matrix(0, nrow = n, ncol = q)
+
   ind_mat[cbind(1:n, as.numeric(part_vec))] = 1
 
   #Statistics for each partition
