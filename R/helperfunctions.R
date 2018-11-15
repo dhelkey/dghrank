@@ -25,12 +25,13 @@ linCholSolver = function(R, y){
   if(is.null(summary_dat)){return(NULL)}
 	y_bar = mean(summary_dat$effect_est)
 	sd_obs = sd(summary_dat$effect_est)
-	est = (summary_dat$effect_est - y_bar) / sd_obs
-	s = summary_dat$effect_s / sd_obs
+	#est = (summary_dat$effect_est - y_bar) / sd_obs
+	est = summary_dat$effect_est / sd_obs
+	s = summary_dat$stat_s / sd_obs
 	return(
 		data.frame( score_est = est, 
 	score_lower = est - z_star * s, score_upper = est + z_star * s,
-	score_s = s, score_z = summary_dat$effect_z )
+	score_s = s, score_z = summary_dat$stat_z )
 	)		
   }
   
@@ -47,5 +48,5 @@ linCholSolver = function(R, y){
 	
 	return(data.frame(effect_est = est_vec, 
 		effect_lower = lower, effect_upper = upper,
-		effect_s = s_vec, effect_z = z_vec))
+		stat_s = s_vec, stat_z = z_vec))
   }

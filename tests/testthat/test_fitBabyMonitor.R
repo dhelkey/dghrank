@@ -20,7 +20,7 @@ test_that('WE have the human readable structure we expect', {
 
 
 test_that('DG & DGH perform functionally the same', {
-  expect_true(cor(dg$Z, r$inst_mat$effect_z) > 0.995)
+  expect_true(cor(dg$Z, r$inst_mat$stat_z) > 0.995)
   expect_true(cor(dg$O - dg$E, r$inst_mat$effect_est) > 0.995)
 
 })
@@ -28,7 +28,7 @@ test_that('DG & DGH perform functionally the same', {
 
 #Compare w/ Draper-Gittoes Rankings
 par(mfrow =c(2,2))
-plot(dg$Z, r$inst_mat$effect_z)
+plot(dg$Z, r$inst_mat$stat_z)
 p1 = plotRankingLines(r$inst_mat$effect_est, r$inst_mat$effect_lower, r$inst_mat$effect_upper, lwd = 2)
 dg$lower = dg$D - r$dat$z_star * dg$SE
 dg$upper = dg$D + r$dat$z_star * dg$SE
@@ -42,9 +42,9 @@ test_that('Matches D-G w/o covariates',{
   num_cat = num_cont = 0
   r = fitBabyMonitor(minimal_data, num_cat, num_cont)
   dg = designBased(0.5, r$dat$y, rep(1, r$dat$N), r$dat$inst_vec)
- # plot(r$inst$effect_z, dg$Z)
-  expect_true(mean(r$inst$effect_z - dg$Z) < 0.15)
-  expect_true(cor(r$inst$effect_z, dg$Z) > 0.995)
+ # plot(r$inst$stat_z, dg$Z)
+  expect_true(mean(r$inst$stat_z - dg$Z) < 0.15)
+  expect_true(cor(r$inst$stat_z, dg$Z) > 0.995)
 })
 
 
@@ -74,9 +74,8 @@ test_that('effect and score z-scores are the same',{
                                'male','outborn', 'csect')]
   r=fitBabyMonitor(minimal_data, 3,0)
   m = r$inst_mat
-  expect_equal(mean(m$effect_z - m$score_z),0)
+  expect_equal(mean(m$stat_z - m$score_z),0)
 })
-
 
 
 test_that('names for output data.frames work as expected',{
@@ -90,5 +89,40 @@ test_that('names for output data.frames work as expected',{
 })
 
 
+##Test that effect and score give the same inference for intervals around 0.........
+test_that('inference from effect and score yield same results',{
+  data('neonatal')
+  minimal_data = neonatal[ ,c('outcome1', 'instid', 'male', 'csect')]
+  r = fitBabyMonitor(minimal_data, 2,0)
+
+  ##Flag by
+  s_l = r$inst_mat$score_lower > 0
+  s_u = r$inst_mat$score_upper < 0
+  e_l = r$inst_mat$effect_lower > 0
+  e_u = r$inst_mat$effect_upper < 0
+
+  expect_equal(s_l, e_l)
+  expect_equal(s_u, e_u)
+})
+
 ##TODO - test that we get the same results (we should)
 # w/ subset vs nonsubset data...
+test_that('we get same results in inst_mat whether or not we include a explanatory variable',{
+  data("neonatal")
+  m1 = neonatal[ ,c('outcome1', 'instid', 'male', 'csect', 'cont1', 'cont2')]
+  m2 = neonatal[ ,c('outcome1', 'instid', 'subset', 'male', 'csect', 'cont1', 'cont2')]
+
+
+  r1 = fitBabyMonitor(m1, 2,2, subset = FALSE)
+  r2 = fitBabyMonitor(m2, 2,2, subset = TRUE)
+
+  #Point estimates and intervals for inst_mat should be the same
+  expect_false(is.null(r$inst_mat$effect_est))
+  expect_equal(r1$inst_mat$effect_est, r2$inst_mat$effect_est, tol = 0.01)
+  expect_equal(r1$inst_mat$effect_lower, r2$inst_mat$effect_lower, tol = 0.01)
+  expect_equal(r1$inst_mat$effect_upper, r2$inst_mat$effect_upper, tol = 0.01)
+  expect_equal(r1$inst_mat$score_est, r2$inst_mat$score_est, tol = 0.01)
+  expect_equal(r1$inst_mat$score_lower, r2$inst_mat$score_lower, tol = 0.01)
+  expect_equal(r1$inst_mat$score_upper, r2$inst_mat$score_upper, tol = 0.01)
+})
+

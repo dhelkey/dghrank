@@ -33,4 +33,5 @@ test_that('missing values in subset are handled correctly', {
 
   expect_equivalent( length(levels(r1$subset)), 7)
   expect_equal( length(levels(r2$subset)), 6)
+  expect_true( '99' %in% levels(r1$subset))
 })

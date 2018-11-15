@@ -10,7 +10,6 @@ partitionSummary = function(outcome, part1, part2 = NULL){
   #This function doesnt handle names that well,
   # and the (few) ways we partition the data must be mmanually labeled
   #Can optionally add dg pcf and group vecs to obtain Draper-Gittoes scores
-
 if (is.null(part1)){return(NULL)}
   #Both vectors need to be partitions
  part1 = as.factor(part1)
@@ -19,7 +18,6 @@ if (is.null(part1)){return(NULL)}
    part2 = as.factor(part2)
    }
    
-
 
   #If two partition vectors specified, run through data
   # and list all combinations of levels (e.g. inst-subst)
@@ -30,7 +28,7 @@ if (is.null(part1)){return(NULL)}
     for (p1 in levels(part1)){
       p2_vec = sort(unique(part2[part1==p1]))
       part_mat = rbind(part_mat,
-                       cbind(p1, as.character(p2_vec)))
+                       cbind( as.character(p1), as.character(p2_vec)))
     }
     names(part_mat) = c(names(part1), names(part2))
   }

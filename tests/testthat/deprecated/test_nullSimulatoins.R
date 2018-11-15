@@ -2,11 +2,15 @@ context('null simulations')
 ##TODO redo these tests for null simulation purposees
 
 
-# data("neonatal")
-# minimal_data = neonatal[ ,c('outcome_cont', 'instid', 'male', 'outborn', 'csect', 'ap5')]
-# dat = parseMinimalData(minimal_data, 4, 0)
-# pcf_cat_vec = apply(dat$cat_var_mat, 1, paste, collapse = '-')
+data("neonatal")
+minimal_data = neonatal[ ,c('outcome_cont', 'instid', 'male', 'outborn', 'csect', 'ap5')]
+dat = parseMinimalData(minimal_data, 4, 0)
+pcf_cat_vec = apply(dat$cat_var_mat, 1, paste, collapse = '-')
 #
+
+
+#TODO this is testing that:
+##Test that that we get the right results for different values of gamma
 # a = designBasedContNull(c(0.0, 0.1, 0.5, 0.9, 1),
 #                         dat$y, pcf_cat_vec, dat$inst_vec )
 #
@@ -25,51 +29,52 @@ context('null simulations')
 #
 #
 #
-# context('generateNullData')
-# data('neonatal')
-#
-# test_that('generateNull data generates expected mean and sd', {
-#   minimal_data = neonatal[ ,c('outcome_cont', 'instid', 'male', 'outborn', 'csect', 'ap5')]
-#   r = fitBabyMonitor(minimal_data, 4, 0)
-#   pcf_vec = apply(r$dat$cat_var_mat, 1, paste, collapse = '-')
-#   null_data = generateNullData(r$dat$y, pcf_vec, iters = 5000)
-#   pcf_levels = levels(as.factor(pcf_vec))
-#   m_vec = sapply(pcf_levels, function(l) mean(r$dat$y[pcf_vec == l]))
-#   s_vec = sapply(pcf_levels, function(l) sd(r$dat$y[pcf_vec == l]))
-#   o_m_vec = sapply(pcf_levels, function(l) mean(null_data$data[pcf_vec == l, ]))
-#   o_s_vec = sapply(pcf_levels, function(l) sd(null_data$data[pcf_vec == l, ]))
-#
-#
-#   #Test data generation
-#   expect_equal( length(null_data$n), length(null_data$m))
-#   expect_equal( length(null_data$n), length(null_data$s))
-#   expect_equivalent(m_vec,null_data$m)
-#   expect_equivalent(s_vec,null_data$s)
-#   expect_true( mean( m_vec - o_m_vec) < 0.005)
-#   expect_true( mean( s_vec - o_s_vec) < 0.001)
-# })
+context('generateNullData')
+data('neonatal')
+
+test_that('generateNull data generates expected mean and sd', {
+  minimal_data = neonatal[ ,c('outcome_cont', 'instid', 'male', 'outborn', 'csect', 'ap5')]
+  r = fitBabyMonitor(minimal_data, 4, 0)
+  pcf_vec = apply(r$dat$cat_var_mat, 1, paste, collapse = '-')
+  null_data = generateNullData(r$dat$y, pcf_vec, iters = 5000)
+  pcf_levels = levels(as.factor(pcf_vec))
+  m_vec = sapply(pcf_levels, function(l) mean(r$dat$y[pcf_vec == l]))
+  s_vec = sapply(pcf_levels, function(l) sd(r$dat$y[pcf_vec == l]))
+  s_vec[is.na(s_vec)] = 0
+  o_m_vec = sapply(pcf_levels, function(l) mean(null_data$data[pcf_vec == l, ]))
+  o_s_vec = sapply(pcf_levels, function(l) sd(null_data$data[pcf_vec == l, ]))
+
+
+  #Test data generation
+  expect_equal( length(null_data$n), length(null_data$m))
+  expect_equal( length(null_data$n), length(null_data$s))
+  expect_equivalent(m_vec,null_data$m)
+  expect_equivalent(s_vec,null_data$s)
+  expect_true( mean( m_vec - o_m_vec) < 0.005)
+  expect_true( mean( s_vec - o_s_vec, na.rm = TRUE) < 0.001)
+})
 #
 #
 #
 # #At the end of null simulations, save them (then run some tests on the matrix to make sure verything works) #(also check mean and variance of Z-scores...)
-# library(abind)
-# library(parallel)
+library(abind)
+library(parallel)
 #
 #
 # ##Test the simulating things in a block
-# minimal_data = neonatal[ ,c('outcome_cont', 'instid', 'male', 'outborn', 'csect', 'ap5')]
-# r = fitBabyMonitor(minimal_data, 4, 0, outcome.na = 'remove')
-# r2 = fitBabyMonitor(minimal_data, 4, 0)
+minimal_data = neonatal[ ,c('outcome_cont', 'instid', 'male', 'outborn', 'csect', 'ap5')]
+r = fitBabyMonitor(minimal_data, 4, 0, outcome.na = 'remove')
+r2 = fitBabyMonitor(minimal_data, 4, 0)
 #
 # #Compare distribuitinos w/ and w/o data removed
-# par(mfrow = c(1,2))
-# hist(r$dat$y)
-# hist(r2$dat$y)
+par(mfrow = c(1,2))
+hist(r$dat$y)
+hist(r2$dat$y)
 #
-# pcf_vec = apply(r$dat$cat_var_mat, 1, paste, collapse = '-')
-# null_data = generateNullData(r$dat$y, pcf_vec, iters = 6)
-# gamma_vec = seq(0.01, 0.99, length = 20)
-# l_out = computeNullBlock(null_data$data, pcf_vec, r$dat$inst_vec, gamma_vec)
+pcf_vec = apply(r$dat$cat_var_mat, 1, paste, collapse = '-')
+null_data = generateNullData(r$dat$y, pcf_vec, iters = 6)
+gamma_vec = seq(0.01, 0.99, length = 20)
+l_out = computeNullBlock(null_data$data, pcf_vec, r$dat$inst_vec, gamma_vec)
 #
 #
 #

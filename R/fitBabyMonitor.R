@@ -107,6 +107,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 
   #Compute z_star based on Bonferonni correction
   dat$z_star = qnorm( 1 - alpha/dat$p)
+  
 
   #Compute DGH effect scores
   inst_effects = dghRank(dat$y, p_i_vec,p_i_overall_var_vec, p_inst$ind_mat, dat$z_star)
@@ -120,7 +121,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
     out = cbind(part_dat$part_mat,
           data.frame(n = part_dat$n, o_mean = part_dat$o_mean, effect_est = dgh_dat$D,
                       effect_lower = dgh_dat$lower, effect_upper = dgh_dat$upper,
-                     effect_s = dgh_dat$S, effect_z = dgh_dat$Z))
+                     stat_s = dgh_dat$S, stat_z = dgh_dat$Z))
     return(out)
   }
   inst_mat = summaryMat(p_inst, inst_effects)
@@ -134,18 +135,19 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
   if(subset){
 	  subset_mat = cbind(subset_mat, toScore(subset_mat, dat$z_star))
 	  names(subset_mat)[1] = 'subset'
+	  z_star_subset = qnorm(1 - alpha / length(unique(dat$subset_vec)))
 	  subset_inst_mat = cbind(subset_inst_mat, toScore(subset_inst_mat,dat$z_star))
 
 	  ##Finally, add in the baseline #TODO fix this hard-coding
-	  subset_mat_baseline = cbind( subset_mat[ ,1:3],
 	  #Subset baseline coding
-		toBaseline(subset_mat$effect_est, subset_mat$effect_s, dat$z_star))
+	  subset_mat_baseline = cbind( subset_mat[ ,1:3], 
+		toBaseline(subset_mat$effect_est, subset_mat$stat_s, dat$z_star))
 
 	#Subset-inst baseline coding
 	   temp_baseline_mat = data.frame()
 	   for(i in unique(subset_inst_mat[ ,1])){
 		indices = subset_inst_mat[ ,1] == i
-		inst_specific = toBaseline(subset_inst_mat$effect_est[indices], subset_inst_mat$effect_s[indices], dat$z_star)
+		inst_specific = toBaseline(subset_inst_mat$effect_est[indices], subset_inst_mat$stat_s[indices], dat$z_star)
 		temp_baseline_mat = rbind(temp_baseline_mat,
 			inst_specific)
 	   }
@@ -154,6 +156,9 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 
 }
 
+	#Export model_mat and mcmc_iters
+	dat$model_mat = model_mat; dat$mcmc_iters = mcmc_iters
+	
   return(list(
     dat = dat, #The parsed input, output of parseMinimalData()
   	pcf_vec = pcf_vec, #Useful for computing D-G rankings

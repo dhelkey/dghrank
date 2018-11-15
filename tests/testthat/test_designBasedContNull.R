@@ -24,11 +24,5 @@ context('designBasedContNull')
 # expect_equal(a[3, ], a3$Z)
 # expect_equal(a[4, ], a4$Z)
 # expect_equal(a[5, ], a5$Z)
-#
-#
-# computeNullBlock = function(simulated_data, gamma_vec){
-#
-# }
-
 
 
