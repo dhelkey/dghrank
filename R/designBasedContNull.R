@@ -48,6 +48,8 @@ designBasedContNull = function(gamma_vec, outcome_vec, pcf_cat_vec, instid_vec){
 			outcomes = outcome_vec[pcf_cat_vec_i == i & instid_vec_i == j]
 			if (length(outcomes) > 1){
 				s_mat[j,i] = var(outcomes)
+				} else{
+				s_mat[j, i] = s_global
 				}
 		}
 	}
@@ -56,7 +58,7 @@ designBasedContNull = function(gamma_vec, outcome_vec, pcf_cat_vec, instid_vec){
 	pcf_ybar_vec = apply(y_mat, 2, sum) / apply(n_mat, 2, sum)
 	n_u_vec = apply(n_mat, 1, sum)
 	n_cat_vec = apply(n_mat, 2, sum)
-
+	
 	#Equation (2) in Draper-Gittoes (2004)
 	O = apply(y_mat, 1, sum) / apply(n_mat, 1, sum)
 	#Equation (3) in D-G
@@ -98,7 +100,7 @@ designBasedContNull = function(gamma_vec, outcome_vec, pcf_cat_vec, instid_vec){
 	# #Now compute w/ lapply
 	V = do.call('cbind',lapply(1:n_u, computeVi, gamma_vec))
 	
-	#REturn SE mat
+	#REturn Z mat
 	return( ( matrix(O, nrow = length(gamma_vec), ncol = n_u, byrow = TRUE) -
 			  matrix(E, nrow = length(gamma_vec), ncol = n_u, byrow = TRUE)) /
 				sqrt(V))

@@ -1,10 +1,9 @@
 modelMatrix = function(x,
 	interactions = FALSE, 
-	sparse = TRUE,
 	intercept = FALSE){
-	#' Create design matrix from data frame
+	#' Create a sparse design matrix from data frame
 	#'
-	#' \code{modelMatrix} takes in a data.frame and encodes it as a model.matrix object.
+	#' \code{modelMatrix} takes in a data.frame and encodes it as a sparse model.Matrix object.
 	#' Factors use treatment ("one-hot") encoding, creating indicator variables from categorical
 	#' and binary variables.
     #' Note that names of categorical variables will change slightly 
@@ -12,7 +11,6 @@ modelMatrix = function(x,
 	#'
 	#' @param x  A data.frame with finite, non-missing elements.
 	#' @param interactions Logical; if \code{TRUE} then all interactions included.
-	#' @param sparse Logical; if \code{TRUE} then output a sparse Matrix object.
 	#' @param intercept Logcal; if \code{TRUE} then include a leading column of 1's.
 	if(is.null(x))return(NULL) #Dealing w/ empty data
 	if (sum(!sapply(x, is.finite)) != 0){
@@ -35,8 +33,9 @@ modelMatrix = function(x,
 	nonempty_indices = apply(abs(mat),2, sum) != 0
 	mat = data.frame(mat[ ,nonempty_indices])
 	colnames(mat) = n_vec[nonempty_indices]
+	n_cols = length(colnames(mat))
 
-	mat = as.matrix(mat)
-	if (sparse){mat = as(mat,'sparseMatrix')}
+	#Export as Matrix
+	mat = Matrix(sapply(mat, as.numeric, simplify = TRUE))
    return( mat)
 }

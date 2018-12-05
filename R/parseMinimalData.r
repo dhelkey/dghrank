@@ -3,7 +3,9 @@ parseMinimalData = function(minimal_data, num_cat, num_cont, subset = FALSE,
 		outcome.na = 'set0', 
 		subset.na = 'category', 
 		cat.na = 'category', 
-		cont.na = 'median'){
+		cont.na = 'median',
+		 n_cutoff = 5){
+	#' @inheritParams fitBabyMonitor
 	#Processes the minimal_data input
 	#Output will have NO NA values
 	#control
@@ -25,12 +27,18 @@ parseMinimalData = function(minimal_data, num_cat, num_cont, subset = FALSE,
 			}
 		}
 		return(N)
-	}
+	}	
 	
 	#Sort by institution
 	minimal_data = minimal_data[order(minimal_data[ ,2]), ]
 	if (sum(!complete.cases(minimal_data[ ,2])) > 0){stop('Missing values for institution not allowed')}
 
+	#Remove any small institutions
+	insts = unique(minimal_data[ ,2])
+	insts_count = sapply(insts, function(i) sum(minimal_data[ ,2] == i))
+	insts_keep = insts[insts_count >= n_cutoff]
+	minimal_data = minimal_data[minimal_data[ ,2] %in% insts_keep, ]
+	
 	#If subsetting by a variable (e.g. race)
 	var_start_index = 3
 	subset_vec = NULL
@@ -110,6 +118,15 @@ parseMinimalData = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	inst_vec = as.factor(minimal_data[ ,2])
 	y = minimal_data[ ,1]
 	
+	
+	#Compute pcf_vec (for DG ranking)
+	if (num_cat > 0){
+		pcf_vec = apply(cat_var_mat, 1, paste, collapse = '-')
+	} else{
+		pcf_vec = rep(1, length(y))
+	}
+	
+	
 	#Return object
 	return(list(
 		indicator_name = names(minimal_data)[1],
@@ -117,6 +134,7 @@ parseMinimalData = function(minimal_data, num_cat, num_cont, subset = FALSE,
 		y = y,
 		N = length(y),
 		p = length(unique(inst_vec)),
+		pcf_vec = pcf_vec,
 		inst_vec = inst_vec, 
 		subset_vec = subset_vec,
 		cat_var_mat = cat_var_mat,

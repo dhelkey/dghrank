@@ -22,31 +22,23 @@ linCholSolver = function(R, y){
 
   toScore = function(summary_dat, z_star){
   #This is just a linear transform, mean and variance transform as well
+  #Requires the effect be computed with an estimate and an SE
   if(is.null(summary_dat)){return(NULL)}
 	y_bar = mean(summary_dat$effect_est)
 	sd_obs = sd(summary_dat$effect_est)
 	#est = (summary_dat$effect_est - y_bar) / sd_obs
 	est = summary_dat$effect_est / sd_obs
-	s = summary_dat$stat_s / sd_obs
+	s = summary_dat$effect_se / sd_obs
 	return(
 		data.frame( score_est = est, 
 	score_lower = est - z_star * s, score_upper = est + z_star * s,
-	score_s = s, score_z = summary_dat$stat_z )
+	score_se = s)
 	)		
   }
   
-  toBaseline = function(est_vec, s_vec, z_star){
-	base = est_vec[1]
-	est_vec = est_vec - base
-	est_vec[1] = 0
-	
-	z_vec = est_vec / s_vec	
-	s_vec[1] = 0
-	
-	lower = est_vec - z_star * s_vec
-	upper = est_vec + z_star * s_vec 
-	
-	return(data.frame(effect_est = est_vec, 
-		effect_lower = lower, effect_upper = upper,
-		stat_s = s_vec, stat_z = z_vec))
-  }
+   computeZstar = function(alpha, p, bonferroni = TRUE){
+		if (!bonferroni){p = 1}
+		return( qnorm(1 - alpha / p))
+	  }
+	  
+  

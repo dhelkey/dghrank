@@ -38,16 +38,26 @@ designBasedCont = function(gamma, outcome_vec, pcf_cat_vec, instid_vec){
 	ybar_mat = y_mat / n_mat 
 	ybar_mat[n_mat == 0] = 0 
 	
-	s_global = var(outcome_vec)
+	
+	
+	
+	
 	#Create variance mat. This loop could be done more efficiently
+	mean_mat2 = matrix(0, nrow = n_u, ncol = n_cat)
 	for (i in 1:n_cat){
 		for (j in 1:n_u){
 			outcomes = outcome_vec[pcf_cat_vec_i == i & instid_vec_i == j]
+			if (length(outcomes) > 0){
+				mean_mat2[j,i] = mean(outcomes)
+			}
 			if (length(outcomes) > 1){
 				s_mat[j,i] = var(outcomes)
 				}	
 		}
 	}
+	
+	s_global = var(outcome_vec)
+	s_mat[n_mat == 1] = s_global
 	
 	#Compute marginals
 	pcf_ybar_vec = apply(y_mat, 2, sum) / apply(n_mat, 2, sum)
@@ -60,7 +70,7 @@ designBasedCont = function(gamma, outcome_vec, pcf_cat_vec, instid_vec){
 	E = apply(t(t(n_mat) * pcf_ybar_vec), 1, sum) / n_u_vec
 	#Equation (4) in D-G
 	D = O - E
-	
+
 	##Now compute variance
 	lambdaFun = function(i,k,j){
 		#Equation (7) in D-G. #Unchanged for continious
@@ -70,10 +80,11 @@ designBasedCont = function(gamma, outcome_vec, pcf_cat_vec, instid_vec){
 			return( -1 * (n_mat[i,j] * n_mat[k,j]) / (n_u_vec[i] * n_cat_vec[j]) )
 		}
 	}
+	
+	
 	vFun = function(k,j, gamma = 0.5){
 		#Equation (11) in D-G #Changed for continous
 		n = n_mat[k,j]
-		pcomb = function(p_local){gamma * p_global + (1-gamma) * p_local}
 		if (n > 0){
 			s_local = s_mat[k,j]
 			s_use = gamma * s_global + (1-gamma) * s_local
@@ -95,13 +106,16 @@ designBasedCont = function(gamma, outcome_vec, pcf_cat_vec, instid_vec){
 	# #Now compute w/ lapply
 	V = sapply(1:n_u, computeVi, gamma)
 	SE = sqrt(V)
-	return( data.frame(
+	return( list(
 			u = instid_unique,
 			O = O,
 			E = E,
 			D = D,
 			SE = SE,
 			Z = (O - E) / SE,
-			n = n_u_vec	
+			n = n_u_vec, 
+			ybar_mat = ybar_mat,
+			n_mat = n_mat,
+			var_mat = s_mat
 	))
 }

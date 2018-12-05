@@ -1,9 +1,21 @@
-fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
-                          var_intercept = 40, var_cat = 10, var_cat_interaction = 10, var_cont = 10,
-                          iters = 100, burn_in = 100, alpha = 0.05,
-                          verbose = TRUE,
-                          outcome.na = 'set0', subset.na = 'category', #Behavior for handling NA values
-                          cat.na = 'category', cont.na = 'median'){
+fitBabyMonitor = function(minimal_data,
+                          num_cat,
+                          num_cont,
+                          subset = FALSE,
+                          var_intercept = 40,
+                          var_cat = 10,
+                          var_cat_interaction = 10,
+                          var_cont = 10,
+                          iters = 100,
+                          burn_in = 100,
+                          alpha = 0.05,
+                          n_cutoff = 5, #Institutions with fewer observations than this will not be recorded, and ranking will not be provided for subset categories w/ fewer than this many observations
+                          bonferroni = TRUE,
+                          outcome.na = 'set0',
+                          subset.na = 'category',
+                          cat.na = 'category',
+                          cont.na = 'median',
+                          dat_out = FALSE){
 	#' Fit Baby-MONITOR for CPQCC/VON
 	#'
 	#' \code{fitBabyMonitor} comprehensively applies the Baby-MONITOR score
@@ -32,10 +44,11 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	#' @param var_cont Prior variance for continuous parameters.
 	#' @param iters Number of MCMC iterations to use.
 	#' @param burn_in Number of initial iterations to discard for burn in.
-	#' @param sparse Should design_matrix be stored as Sparse matrix? Requires Matrix package.
 	#' @param alpha We look at posterior (1-alpha)\% posterior intervals.
 	#' @param verbose If TRUE, display status messages while fitting
 	#' @param subset If TRUE, perform subset fitting tasks
+	#' @param dat_out If TRUE, export MCMC iterations and other data in dat.
+	#' @param
 	#' @return
 	#'	Returns a large list with the following components:
 	#'
@@ -57,22 +70,12 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	#'		prior_var_vec: Vector of prior variances for each coefficient
 	#'
 	#'		model_matrix: Design matrix
-
-  ###TODO fix this, NaN showing up in levels (e.g. ap5). It should be '99' or string Na, or something, not NaN
-  #TODO - remove '.' characters in variables, just in case this causes
-  #any problems anywyere
-  #TODO add documentation everywhere, including datasets
-  ##EMAIL jochen about includuing data in the package dump
-#TODO add the fix that Lucy made
-  #TODO fix sparse matrices (will probably need to add something w/ namespaces)
-#TODO pre-release tests should also include dowloading from github and ensuring it runs as intended
+	#'
+	#'
+	#'
 
   dat = parseMinimalData(minimal_data, num_cat, num_cont,
-                                      subset = subset, outcome.na = outcome.na, subset.na = subset.na, cat.na = cat.na, cont.na = cont.na)
-	pcf_vec = NULL
-	if (!is.null(dat$cat_var_mat)){
-	  pcf_vec = apply(dat$cat_var_mat, 1, paste, collapse = '-') #For DG ranking
-	}
+                                      subset = subset, outcome.na = outcome.na, subset.na = subset.na, cat.na = cat.na, cont.na = cont.na, n_cutoff = n_cutoff)
 
   #Partition data by institution, subset, and institution-subset
   p_inst = partitionSummary(dat$y, dat$inst_vec)
@@ -88,32 +91,29 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
   #TODO intercept, cat, interaction, cont variances. No longer fit w/ subset or inst :)
   #With this sample size, the posterior is overwhelmed by the likelihood and so the prior doesn't really matter
   prior_var_vec = rep(var_cat, dim(model_mat)[2])#TODO fix this prior specification
+#  prior_var_vec = c(1, )
 
   #Fit the design matrix to a probit model
-  #TODO, modify code to use Bayesian Regression for continuous predictors
   mcmc_iters = probitFit(dat$y, model_mat, prior_var_vec,
                          iters = iters + burn_in)[-(1:burn_in),  ]
 
-  #Large matrix to compute and store,
-  #TODO avoid computing this
-  #TODO get the namespace working so we can do this multiplication as a spase matrix
-  p_i_mat = pnorm(tcrossprod(as.matrix(model_mat), mcmc_iters))
+  #Large matrix to compute and store  TODO there are ways to avoid storing this, if necesasary
+  p_i_mat = pnorm(as.matrix(tcrossprod(model_mat, mcmc_iters))) 
 
   #Extract rowwise mean, its implied observational variance, and rowwise variance
   p_i_vec = apply(p_i_mat, 1, mean)
   p_i_var_vec = apply(p_i_mat, 1, var)
   pq_i_vec = p_i_vec * (1-p_i_vec)
   p_i_overall_var_vec =  pq_i_vec + p_i_var_vec #Law of total variance
-
-  #Compute z_star based on Bonferonni correction
-  dat$z_star = qnorm( 1 - alpha/dat$p)
+  rm(p_i_mat) #Remove for space
   
+  #Compute z_star based on Bonferonni correction
+  dat$z_star = computeZstar(alpha, dat$p, bonferroni)
 
   #Compute DGH effect scores
   inst_effects = dghRank(dat$y, p_i_vec,p_i_overall_var_vec, p_inst$ind_mat, dat$z_star)
   subset_effects  = dghRank(dat$y, p_i_vec, p_i_overall_var_vec, p_subset$ind_mat, dat$z_star)
   subset_inst_effects = dghRank(dat$y, p_i_vec, p_i_overall_var_vec, p_inst_subset$ind_mat, dat$z_star)
-
 
   #Build human readable data.frames
   summaryMat = function(part_dat, dgh_dat){
@@ -121,51 +121,47 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont, subset = FALSE,
     out = cbind(part_dat$part_mat,
           data.frame(n = part_dat$n, o_mean = part_dat$o_mean, effect_est = dgh_dat$D,
                       effect_lower = dgh_dat$lower, effect_upper = dgh_dat$upper,
-                     stat_s = dgh_dat$S, stat_z = dgh_dat$Z))
+                     effect_se = dgh_dat$S, stat_z = dgh_dat$Z))
     return(out)
   }
   inst_mat = summaryMat(p_inst, inst_effects)
   subset_mat = summaryMat(p_subset, subset_effects)
-  subset_inst_mat = summaryMat(p_inst_subset, subset_inst_effects)
-
-
+  inst_subset_mat = summaryMat(p_inst_subset, subset_inst_effects)
 	inst_mat = cbind(inst_mat, toScore(inst_mat, dat$z_star))
 	names(inst_mat)[1] = 'inst'
-	subset_mat_baseline = subset_inst_mat_baseline = NULL
+	subset_mat_baseline = inst_subset_mat_baseline = NULL
   if(subset){
-	  subset_mat = cbind(subset_mat, toScore(subset_mat, dat$z_star))
-	  names(subset_mat)[1] = 'subset'
-	  z_star_subset = qnorm(1 - alpha / length(unique(dat$subset_vec)))
-	  subset_inst_mat = cbind(subset_inst_mat, toScore(subset_inst_mat,dat$z_star))
+	names(subset_mat)[1] = 'subset'
+	  z_star_subset = computeZstar(alpha, length(unique(dat$subset_vec)), bonferroni)
+	  z_star_inst_subset = computeZstar(alpha, dim(inst_subset_mat)[1], bonferroni)
+	  
+	   subset_mat = cbind(subset_mat, toScore(subset_mat, z_star_subset))
+	  
+	  inst_subset_mat = cbind(inst_subset_mat, toScore(inst_subset_mat,z_star_inst_subset))
+	  names(inst_subset_mat)[1:2] = c('inst','subset')
 
-	  ##Finally, add in the baseline #TODO fix this hard-coding
+	  ##Finally, add in the baseline 
 	  #Subset baseline coding
-	  subset_mat_baseline = cbind( subset_mat[ ,1:3], 
-		toBaseline(subset_mat$effect_est, subset_mat$stat_s, dat$z_star))
-
-	#Subset-inst baseline coding
-	   temp_baseline_mat = data.frame()
-	   for(i in unique(subset_inst_mat[ ,1])){
-		indices = subset_inst_mat[ ,1] == i
-		inst_specific = toBaseline(subset_inst_mat$effect_est[indices], subset_inst_mat$stat_s[indices], dat$z_star)
-		temp_baseline_mat = rbind(temp_baseline_mat,
-			inst_specific)
-	   }
-	   names(subset_inst_mat)[1:2] = c('inst', 'subset')
-	   subset_inst_mat_baseline = cbind( subset_inst_mat[ ,1:4], temp_baseline_mat)
-
+	  subset_mat_baseline = toBaseline(subset_mat)
+		
+	#Add in inst_baseline 
+	inst_subset_list_baseline = lapply(unique(inst_subset_mat$inst),
+		function(inst) toBaseline(inst_subset_mat[inst_subset_mat$inst == inst,  ], inst=TRUE))
+	inst_subset_mat_baseline = do.call('rbind', inst_subset_list_baseline)
 }
 
-	#Export model_mat and mcmc_iters
-	dat$model_mat = model_mat; dat$mcmc_iters = mcmc_iters
-	
+	if (!dat_out){#Saves storage space.
+	  dat = NULL
+	} else{#Export variables
+		dat$model_mat = model_mat; dat$mcmc_iters = mcmc_iters; dat$prior_var_vec = prior_var_vec
+	}
+
   return(list(
     dat = dat, #The parsed input, output of parseMinimalData()
-  	pcf_vec = pcf_vec, #Useful for computing D-G rankings
     inst_mat = inst_mat,
-	full_subset_mat_nobaseline = subset_mat,
-	full_subset_mat_baseline = subset_mat_baseline,
-	subset_nobaseline_mat = subset_inst_mat,
-	subset_baseline_mat = subset_inst_mat_baseline
+	subset_mat_nobaseline = subset_mat,
+	subset_mat_baseline = subset_mat_baseline,
+	inst_subset_mat_nobaseline = inst_subset_mat,
+	inst_subset_mat_baseline = inst_subset_mat_baseline
 	 ))
 }

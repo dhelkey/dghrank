@@ -1,16 +1,17 @@
 Package: dghrank
-Title: Construct Draper-Gittoes-Helkey Rankings of Institutions
-Version: 0.9
+Title: Construct Draper-Gittoes-Helkey Institution Rankings
+Version: 0.95
+Date: 2018-12-05
 Authors@R: c(person("Daniel", "Helkey", email = "dhelkey@ucsc.edu",
                   role = c("aut", "cre")),
-				person("David", "Draper", role = "ctb",
+				person("David", "Draper", role = "aut",
 					email = "draper@ucsc.edu"),
 				person("Jessica", "Liu", role = "ctb",
 					email = "jbliu@stanford.edu"),
 				person("Lucy", "Greenberg", role = "ctb",
 					email = "LGreenberg@vtoxford.org"),
 				person("Daniel", "Kirsner", role = "ctb"))
-Description: Provides functions for ranking institions with respect to binary outcome performance. Rankings are computed according to Draper-Gittoes-Helkey (2018), which extends Draper-Gittoes (2004) methodology. Functions are provided to generate composite scores. Main fitting function (fitBabyMonitor) intended for CPQCC/VON usage, but fast functions are provided for Bayesian linear and probit regression.
+Description: Provides functions for ranking institutions with respect to binary outcome performance. Rankings are computed according to Draper-Gittoes-Helkey (2018), which extends Draper-Gittoes (2004) methodology. Functions are provided to generate composite scores. Main fitting function (fitBabyMonitor) intended for CPQCC/VON usage, but fast functions are provided for Bayesian linear and probit regression.
 Depends: R (>= 3.1.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
