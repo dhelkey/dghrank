@@ -2,6 +2,7 @@ fitBabyMonitor = function(minimal_data,
                           num_cat,
                           num_cont,
                           subset = FALSE,
+						  subset_base_catgory = 1,
                           var_intercept = 40,
                           var_cat = 10,
                           var_cat_interaction = 10,
@@ -9,7 +10,7 @@ fitBabyMonitor = function(minimal_data,
                           iters = 100,
                           burn_in = 100,
                           alpha = 0.05,
-                          n_cutoff = 5, #Institutions with fewer observations than this will not be recorded, and ranking will not be provided for subset categories w/ fewer than this many observations
+                          n_cutoff = 5,
                           bonferroni = TRUE,
                           outcome.na = 'set0',
                           subset.na = 'category',
@@ -87,25 +88,33 @@ fitBabyMonitor = function(minimal_data,
   model_mat_cat = modelMatrix(dat$cat_var_mat, interactions = TRUE)
   model_mat_cont = modelMatrix(dat$cont_var_mat)
   model_mat = cbind(rep(1, dat$N), model_mat_cat, model_mat_cont)
-
-  #TODO intercept, cat, interaction, cont variances. No longer fit w/ subset or inst :)
-  #With this sample size, the posterior is overwhelmed by the likelihood and so the prior doesn't really matter
-  prior_var_vec = rep(var_cat, dim(model_mat)[2])#TODO fix this prior specification
-#  prior_var_vec = c(1, )
+  
+  #Build prior variance vector
+  prior_var_cat = NULL
+  if (num_cat > 0){
+    prior_var_cat = rep(var_cat, dim(model_mat_cat)[2])
+	prior_var_cat[grep(':',
+			colnames(model_mat_cat))] = var_cat_interaction
+  }
+   prior_var_cont = NULL
+   if (num_cont > 0){
+	prior_var_cont = rep(var_cont, dim(model_mat_cont)[2])
+  }
+  prior_var_vec = c(var_intercept, prior_var_cat, prior_var_cont)
 
   #Fit the design matrix to a probit model
   mcmc_iters = probitFit(dat$y, model_mat, prior_var_vec,
                          iters = iters + burn_in)[-(1:burn_in),  ]
 
-  #Large matrix to compute and store  TODO there are ways to avoid storing this, if necesasary
+  #MCMC matrix of individual level pobabilities
   p_i_mat = pnorm(as.matrix(tcrossprod(model_mat, mcmc_iters))) 
 
-  #Extract rowwise mean, its implied observational variance, and rowwise variance
+  #Extract rowwise mean, implied observational variance, and rowwise variance
   p_i_vec = apply(p_i_mat, 1, mean)
   p_i_var_vec = apply(p_i_mat, 1, var)
   pq_i_vec = p_i_vec * (1-p_i_vec)
   p_i_overall_var_vec =  pq_i_vec + p_i_var_vec #Law of total variance
-  rm(p_i_mat) #Remove for space
+  rm(p_i_mat) #Remove to save space
   
   #Compute z_star based on Bonferonni correction
   dat$z_star = computeZstar(alpha, dat$p, bonferroni)
