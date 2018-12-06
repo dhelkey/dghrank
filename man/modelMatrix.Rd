@@ -2,21 +2,19 @@
 % Please edit documentation in R/modelMatrix.R
 \name{modelMatrix}
 \alias{modelMatrix}
-\title{Create design matrix from data frame}
+\title{Create a sparse design matrix from data frame}
 \usage{
-modelMatrix(x, interactions = FALSE, sparse = TRUE, intercept = FALSE)
+modelMatrix(x, interactions = FALSE, intercept = FALSE)
 }
 \arguments{
 \item{x}{A data.frame with finite, non-missing elements.}
 
 \item{interactions}{Logical; if \code{TRUE} then all interactions included.}
 
-\item{sparse}{Logical; if \code{TRUE} then output a sparse Matrix object.}
-
 \item{intercept}{Logcal; if \code{TRUE} then include a leading column of 1's.}
 }
 \description{
-\code{modelMatrix} takes in a data.frame and encodes it as a model.matrix object.
+\code{modelMatrix} takes in a data.frame and encodes it as a sparse model.Matrix object.
 Factors use treatment ("one-hot") encoding, creating indicator variables from categorical
 and binary variables.
 Note that names of categorical variables will change slightly 

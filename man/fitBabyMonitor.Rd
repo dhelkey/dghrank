@@ -5,10 +5,11 @@
 \title{Fit Baby-MONITOR for CPQCC/VON}
 \usage{
 fitBabyMonitor(minimal_data, num_cat, num_cont, subset = FALSE,
-  var_intercept = 40, var_cat = 10, var_cat_interaction = 10,
-  var_cont = 10, iters = 100, burn_in = 100, alpha = 0.05,
-  verbose = TRUE, outcome.na = "set0", subset.na = "category",
-  cat.na = "category", cont.na = "median")
+  subset_base_catgory = 1, var_intercept = 40, var_cat = 10,
+  var_cat_interaction = 10, var_cont = 10, iters = 100, burn_in = 100,
+  alpha = 0.05, n_cutoff = 5, bonferroni = TRUE, outcome_na = "set0",
+  subset_na = "category", cat_na = "category", cont_na = "median",
+  dat_out = FALSE)
 }
 \arguments{
 \item{minimal_data}{Data_frame with a particular format:
@@ -23,29 +24,37 @@ Next: num_cat columns of categorical variables (num_cat can equal 0)
 
 Next: num_cont columns of continuous variables (num_cont can equal 0)}
 
-\item{num_cat}{Scalar number of categorical variables.}
+\item{num_cat}{integer. Number of categorical risk adjusters.}
 
-\item{num_cont}{Number of continuous variables.}
+\item{num_cont}{integer. Number of continious risk adjusters.}
 
-\item{subset}{If TRUE, perform subset fitting tasks}
+\item{subset}{logical; if TRUE perform analysis with a subset variable ( and \code{minimal_data} must have subset data in the 3rd column)}
 
-\item{var_intercept}{Prior variance for intercept parameter.}
+\item{var_intercept}{scalar. Prior variance for the intercept.}
 
-\item{var_cat}{Prior variance for categorical parameters.}
+\item{var_cat}{scalar. Prior variance for categorical risk adjuster parameters.}
 
-\item{var_cat_interaction}{Prior variance for categorical interaction parameters.}
+\item{var_cat_interaction}{scalar. Prior variance for interactions between categorical risk adjusters.}
 
-\item{var_cont}{Prior variance for continuous parameters.}
+\item{var_cont}{scalar. Prior variance for continuous risk adjusters.}
 
-\item{iters}{Number of MCMC iterations to use.}
+\item{iters}{integer. Desired number of posterior MCMC iterations.}
 
-\item{burn_in}{Number of initial iterations to discard for burn in.}
+\item{burn_in}{integer. Number of 'burn-in' MCMC iterations to discard.}
 
-\item{alpha}{We look at posterior (1-alpha)\% posterior intervals.}
+\item{alpha}{scalar in (0,1). Statistical signifiance threshold. Posterior (1-alpha)\% intervals are generated.}
 
-\item{verbose}{If TRUE, display status messages while fitting}
+\item{bonferroni}{logical; if TRUE, posterior intervals are widened with the Bonferroni correction.}
 
-\item{sparse}{Should design_matrix be stored as Sparse matrix? Requires Matrix package.}
+\item{outcome_na}{Method for handling any NA values in the outcome vec. 'remove' removes rows with NA outcomes while 'set0' keeps the row and sets the outcome to 0.}
+
+\item{subset_na}{Method for handling any NA subset values. 'remove' removes rows with NA subset values while 'category' makes a new subset category (coded as 99) for NA values.}
+
+\item{cat_na}{Method for handling any NA values in the categorical risk adjusters. 'remove' removes rows with NA values while 'category' makes a new category (coded as 99) for NA catorical risk adjusters.}
+
+\item{cont_na}{Method for handling any NA values in the continous risk adjusters. 'remove' removes rows with NA values while 'median' replaces NA with the median value of the risk adjuster.}
+
+\item{dat_out}{logical; if TRUE, export MCMC iterations and other parameters in the \code{dat} component.}
 }
 \value{
 Returns a large list with the following components:
@@ -70,8 +79,5 @@ Returns a large list with the following components:
 	model_matrix: Design matrix
 }
 \description{
-\code{fitBabyMonitor} comprehensively applies the Baby-MONITOR score
-Returns a large list. Use inst_mat for institution rankings,
-full_subset_mat_baseline and full_subset_mat_nobaseline for subset rankings,
-and subset_baseline_mat and subset_nobaseline_mat for subset rankings within institution.
+\code{fitBabyMonitor} applies the Baby-MONITOR score  to a single performance indicator. Designed for CPQCC/VON usage.
 }

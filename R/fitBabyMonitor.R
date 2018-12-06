@@ -1,29 +1,6 @@
-fitBabyMonitor = function(minimal_data,
-                          num_cat,
-                          num_cont,
-                          subset = FALSE,
-						  subset_base_catgory = 1,
-                          var_intercept = 40,
-                          var_cat = 10,
-                          var_cat_interaction = 10,
-                          var_cont = 10,
-                          iters = 100,
-                          burn_in = 100,
-                          alpha = 0.05,
-                          n_cutoff = 5,
-                          bonferroni = TRUE,
-                          outcome.na = 'set0',
-                          subset.na = 'category',
-                          cat.na = 'category',
-                          cont.na = 'median',
-                          dat_out = FALSE){
-	#' Fit Baby-MONITOR for CPQCC/VON
+#' Fit Baby-MONITOR for CPQCC/VON
 	#'
-	#' \code{fitBabyMonitor} comprehensively applies the Baby-MONITOR score
-	# to a \code{minimal_data} file. Designed for CPQCC/VON.
-	#' Returns a large list. Use inst_mat for institution rankings,
-	#' full_subset_mat_baseline and full_subset_mat_nobaseline for subset rankings,
-	#' and subset_baseline_mat and subset_nobaseline_mat for subset rankings within institution.
+	#' \code{fitBabyMonitor} applies the Baby-MONITOR score  to a single performance indicator. Designed for CPQCC/VON usage. 
 	#'
 	#' @param minimal_data Data_frame with a particular format:
 	#'
@@ -37,19 +14,23 @@ fitBabyMonitor = function(minimal_data,
 	#'
 	#' Next: num_cont columns of continuous variables (num_cont can equal 0)
 	#'
-	#' @param num_cat Scalar number of categorical variables.
-	#' @param num_cont Number of continuous variables.
-	#' @param var_intercept Prior variance for intercept parameter.
-	#' @param var_cat Prior variance for categorical parameters.
-	#' @param var_cat_interaction Prior variance for categorical interaction parameters.
-	#' @param var_cont Prior variance for continuous parameters.
-	#' @param iters Number of MCMC iterations to use.
-	#' @param burn_in Number of initial iterations to discard for burn in.
-	#' @param alpha We look at posterior (1-alpha)\% posterior intervals.
-	#' @param verbose If TRUE, display status messages while fitting
-	#' @param subset If TRUE, perform subset fitting tasks
-	#' @param dat_out If TRUE, export MCMC iterations and other data in dat.
-	#' @param
+	#' @param subset logical; if TRUE perform analysis with a subset variable ( and \code{minimal_data} must have subset data in the 3rd column)
+	#'
+	#' @param num_cat integer. Number of categorical risk adjusters.
+	#' @param num_cont integer. Number of continious risk adjusters.
+	#' @param var_intercept scalar. Prior variance for the intercept.
+	#' @param var_cat scalar. Prior variance for categorical risk adjuster parameters. 
+	#' @param var_cat_interaction scalar. Prior variance for interactions between categorical risk adjusters. 
+	#' @param var_cont scalar. Prior variance for continuous risk adjusters.
+	#' @param iters integer. Desired number of posterior MCMC iterations.
+	#' @param burn_in integer. Number of 'burn-in' MCMC iterations to discard. 
+	#' @param alpha scalar in (0,1). Statistical signifiance threshold. Posterior (1-alpha)\% intervals are generated.
+	#' @param bonferroni logical; if TRUE, posterior intervals are widened with the Bonferroni correction.
+	#' @param dat_out logical; if TRUE, export MCMC iterations and other parameters in the \code{dat} component.
+	#' @param outcome_na Method for handling any NA values in the outcome vec. 'remove' removes rows with NA outcomes while 'set0' keeps the row and sets the outcome to 0.
+	#' @param subset_na Method for handling any NA subset values. 'remove' removes rows with NA subset values while 'category' makes a new subset category (coded as 99) for NA values.
+	#' @param cat_na Method for handling any NA values in the categorical risk adjusters. 'remove' removes rows with NA values while 'category' makes a new category (coded as 99) for NA catorical risk adjusters.
+	#' @param cont_na Method for handling any NA values in the continous risk adjusters. 'remove' removes rows with NA values while 'median' replaces NA with the median value of the risk adjuster. 
 	#' @return
 	#'	Returns a large list with the following components:
 	#'
@@ -75,8 +56,29 @@ fitBabyMonitor = function(minimal_data,
 	#'
 	#'
 
+fitBabyMonitor = function(minimal_data,
+                          num_cat,
+                          num_cont,
+                          subset = FALSE,
+						  subset_base_catgory = 1,
+                          var_intercept = 40,
+                          var_cat = 10,
+                          var_cat_interaction = 10,
+                          var_cont = 10,
+                          iters = 100,
+                          burn_in = 100,
+                          alpha = 0.05,
+                          n_cutoff = 5,
+                          bonferroni = TRUE,
+                          outcome_na = 'set0',
+                          subset_na = 'category',
+                          cat_na = 'category',
+                          cont_na = 'median',
+                          dat_out = FALSE){
+	
+
   dat = parseMinimalData(minimal_data, num_cat, num_cont,
-                                      subset = subset, outcome.na = outcome.na, subset.na = subset.na, cat.na = cat.na, cont.na = cont.na, n_cutoff = n_cutoff)
+                                      subset = subset, outcome_na = outcome_na, subset_na = subset_na, cat_na = cat_na, cont_na = cont_na, n_cutoff = n_cutoff)
 
   #Partition data by institution, subset, and institution-subset
   p_inst = partitionSummary(dat$y, dat$inst_vec)
