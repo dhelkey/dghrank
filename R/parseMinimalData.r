@@ -38,6 +38,10 @@ parseMinimalData = function(minimal_data, num_cat, num_cont, subset = FALSE,
 	insts_count = sapply(insts, function(i) sum(minimal_data[ ,2] == i))
 	insts_keep = insts[insts_count >= n_cutoff]
 	minimal_data = minimal_data[minimal_data[ ,2] %in% insts_keep, ]
+	if (is.factor(minimal_data[ ,2])){
+		minimal_data[ ,2] = droplevels(minimal_data[ ,2]) #Drop the factor levels of any institutions we remove
+	}
+	
 	
 	#If subsetting by a variable (e.g. race)
 	var_start_index = 3

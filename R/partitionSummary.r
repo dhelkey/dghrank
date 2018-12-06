@@ -30,7 +30,7 @@ if (is.null(part1)){return(NULL)}
       part_mat = rbind(part_mat,
                        cbind( as.character(p1), as.character(p2_vec)))
     }
-    names(part_mat) = c(names(part1), names(part2))
+    #names(part_mat) = c(names(part1), names(part2))
   }
   
   #vector partition levels of length q
