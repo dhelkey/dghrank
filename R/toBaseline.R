@@ -21,7 +21,9 @@ toBaseline = function(data_frame, inst = FALSE){
 	data_frame$score_lower = data_frame$score_lower - sub_score
 	data_frame$score_lower = data_frame$score_lower - sub_score
 	
-	data_frame$effect_lower[base_index] = data_frame$effect_upper[base_index] = data_frame$score_lower[base_index] = data_frame$score_upper[base_index] = 0
+	data_frame$effect_lower[base_index] = data_frame$effect_upper[base_index] = 
+	data_frame$score_lower[base_index] = data_frame$score_upper[base_index] = 
+	data_frame$score_se[base_index] = data_frame$effect_se[base_index] = 0
 
 	return(data_frame[ ,return_cols])
 }
