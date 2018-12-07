@@ -89,8 +89,9 @@ fitBabyMonitor = function(minimal_data,
   #Build model additively
   model_mat_cat = modelMatrix(dat$cat_var_mat, interactions = TRUE)
   model_mat_cont = modelMatrix(dat$cont_var_mat)
-  model_mat = cbind(rep(1, dat$N), model_mat_cat, model_mat_cont)
-  
+  model_mat = cbind( rep(1, dat$N), model_mat_cat, model_mat_cont)
+  if (num_cat == 0){  model_mat = cbind( rep(1, dat$N), model_mat_cont)} #Not sure why cbind doesn't handle the NULL well..
+
   #Build prior variance vector
   prior_var_cat = NULL
   if (num_cat > 0){
@@ -104,6 +105,7 @@ fitBabyMonitor = function(minimal_data,
   }
   prior_var_vec = c(var_intercept, prior_var_cat, prior_var_cont)
 
+  
   #Fit the design matrix to a probit model
   mcmc_iters = probitFit(dat$y, model_mat, prior_var_vec,
                          iters = iters + burn_in)[-(1:burn_in),  ]

@@ -32,10 +32,11 @@ modelMatrix = function(x,
 	n_vec = colnames(mat)
 	nonempty_indices = apply(abs(mat),2, sum) != 0
 	mat = data.frame(mat[ ,nonempty_indices])
+	p = length(mat)
 	colnames(mat) = n_vec[nonempty_indices]
 	n_cols = length(colnames(mat))
 
 	#Export as Matrix
-	mat = Matrix(sapply(mat, as.numeric, simplify = TRUE))
+	mat = Matrix(sapply(mat, as.numeric))
    return( mat)
 }
