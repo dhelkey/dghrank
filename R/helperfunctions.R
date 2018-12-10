@@ -19,7 +19,6 @@ linCholSolver = function(R, y){
 		return(backsolve(R, q))
 }
 
-
   toScore = function(summary_dat, z_star){
   #This is just a linear transform, mean and variance transform as well
   #Requires the effect be computed with an estimate and an SE

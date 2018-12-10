@@ -164,10 +164,11 @@ fitBabyMonitor = function(minimal_data,
 }
 
 	if (!dat_out){#Saves storage space.
-	  dat = NULL
+	  dat = list()
 	} else{#Export variables
 		dat$model_mat = model_mat; dat$mcmc_iters = mcmc_iters; dat$prior_var_vec = prior_var_vec
 	}
+	dat$subset = subset #Save subset info
 
   return(list(
     dat = dat, #The parsed input, output of parseMinimalData()
