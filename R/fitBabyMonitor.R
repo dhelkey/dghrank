@@ -67,7 +67,7 @@ fitBabyMonitor = function(minimal_data,
                           var_cont = 10,
                           iters = 100,
                           burn_in = 100,
-                          alpha = 0.05,
+                          alpha = 0.01,
                           n_cutoff = 5,
                           bonferroni = TRUE,
                           outcome_na = 'set0',
@@ -106,14 +106,14 @@ fitBabyMonitor = function(minimal_data,
   prior_var_vec = c(var_intercept, prior_var_cat, prior_var_cont)
 
   
-  #Fit the design matrix to a probit model
+  #Fit probit regression
   mcmc_iters = probitFit(dat$y, model_mat, prior_var_vec,
                          iters = iters + burn_in)[-(1:burn_in),  ]
 
   #MCMC matrix of individual level pobabilities
   p_i_mat = pnorm(as.matrix(tcrossprod(model_mat, mcmc_iters))) 
 
-  #Extract rowwise mean, implied observational variance, and rowwise variance
+  #Extract posterior rowwise mean, implied observational variance, and rowwise variance
   p_i_vec = apply(p_i_mat, 1, mean)
   p_i_var_vec = apply(p_i_mat, 1, var)
   pq_i_vec = p_i_vec * (1-p_i_vec)
@@ -153,7 +153,6 @@ fitBabyMonitor = function(minimal_data,
 	  inst_subset_mat = cbind(inst_subset_mat, toScore(inst_subset_mat,z_star_inst_subset))
 	  names(inst_subset_mat)[1:2] = c('inst','subset')
 
-	  ##Finally, add in the baseline 
 	  #Subset baseline coding
 	  subset_mat_baseline = toBaseline(subset_mat)
 		
@@ -163,15 +162,15 @@ fitBabyMonitor = function(minimal_data,
 	inst_subset_mat_baseline = do.call('rbind', inst_subset_list_baseline)
 }
 
-	if (!dat_out){#Saves storage space.
+	if (!dat_out){#Remove saved variables to save storage space.
 	  dat = list()
-	} else{#Export variables
+	} else{#If dat_out, export variables
 		dat$model_mat = model_mat; dat$mcmc_iters = mcmc_iters; dat$prior_var_vec = prior_var_vec
 	}
 	dat$subset = subset #Save subset info
 
   return(list(
-    dat = dat, #The parsed input, output of parseMinimalData()
+    dat = dat,
     inst_mat = inst_mat,
 	subset_mat_nobaseline = subset_mat,
 	subset_mat_baseline = subset_mat_baseline,

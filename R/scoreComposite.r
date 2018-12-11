@@ -6,15 +6,11 @@
 #'
 #' @inheritParams fitBabyMonitor
 scoreComposite = function(returner_list, alpha = 0.05, bonferroni = TRUE){
-
-	#Different types of composite scores available
-  type_vec = c('inst', 'subset_baseline', 'subset_nobaseline', 'inst_subset_baseline' , 'inst_subset_nobaseline')
-
-  #Check if all are subset
+  #Either ALL of the inputs are subset analyses, or not
   subset = all( sapply(returner_list, function(x) x$dat$subset))
   
-  
-  returner_out = list()
+  returner_out = list() #Generate data for all tables in a loop
+  type_vec = c('inst', 'subset_baseline', 'subset_nobaseline', 'inst_subset_baseline' , 'inst_subset_nobaseline')
 	for (type in type_vec){
 	 if (type == 'inst'){
 		id_cols = 'inst'
@@ -77,8 +73,7 @@ scoreComposite = function(returner_list, alpha = 0.05, bonferroni = TRUE){
 		id_str = apply(r$id_mat, 1, idStr)
 		indices = match(id_str, full_id_vec)
 		score_est_mat[indices, i] = r$score_est
-		score_se_mat[indices, i] = r$score_se
-		
+		score_se_mat[indices, i] = r$score_se	
 		score_present_mat[indices, i] = 1
 	  }
 
@@ -87,16 +82,15 @@ scoreComposite = function(returner_list, alpha = 0.05, bonferroni = TRUE){
 	  score_est = apply(score_est_mat, 1, sum, na.rm = TRUE) / sqrt(n_components)
 	  score_se = apply(score_se_mat, 1,function(x) sqrt(sum(x^2, na.rm =TRUE))) / sqrt(n_components)
 
-		#Compute upper and lower from est and SE
-		z_star =  computeZstar(alpha, P, bonferroni)
-		score_lower = score_est - z_star * score_se
-		score_upper = score_est + z_star * score_se
+	  #Compute upper and lower from est and SE
+	  z_star =  computeZstar(alpha, P, bonferroni)
+	  score_lower = score_est - z_star * score_se
+	  score_upper = score_est + z_star * score_se
 
-	  
-	  #Spit out data
+	  #Add table to the output list
 	  out_mat = data.frame(cbind(full_id_mat, score_est, score_se, score_lower, score_upper, n_components))
 	  names(out_mat)[1:n_id_cols] = id_cols
-	  returner_out[[mat]] = out_mat
+		  returner_out[[mat]] = out_mat
 	}
 	return(returner_out)
 }
