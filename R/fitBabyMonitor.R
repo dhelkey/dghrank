@@ -1,6 +1,6 @@
 #' Fit Baby-MONITOR for CPQCC/VON
 	#'
-	#' \code{fitBabyMonitor} applies the Baby-MONITOR score  to a single performance indicator. Designed for CPQCC/VON usage. 
+	#' \code{fitBabyMonitor} applies the Baby-MONITOR score  to a single performance indicator. Designed for CPQCC/VON usage.
 	#'
 	#' @param minimal_data Data_frame with a particular format:
 	#'
@@ -19,18 +19,18 @@
 	#' @param num_cat integer. Number of categorical risk adjusters.
 	#' @param num_cont integer. Number of continious risk adjusters.
 	#' @param var_intercept scalar. Prior variance for the intercept.
-	#' @param var_cat scalar. Prior variance for categorical risk adjuster parameters. 
-	#' @param var_cat_interaction scalar. Prior variance for interactions between categorical risk adjusters. 
+	#' @param var_cat scalar. Prior variance for categorical risk adjuster parameters.
+	#' @param var_cat_interaction scalar. Prior variance for interactions between categorical risk adjusters.
 	#' @param var_cont scalar. Prior variance for continuous risk adjusters.
 	#' @param iters integer. Desired number of posterior MCMC iterations.
-	#' @param burn_in integer. Number of 'burn-in' MCMC iterations to discard. 
+	#' @param burn_in integer. Number of 'burn-in' MCMC iterations to discard.
 	#' @param alpha scalar in (0,1). Statistical signifiance threshold. Posterior (1-alpha)\% intervals are generated.
 	#' @param bonferroni logical; if TRUE, posterior intervals are widened with the Bonferroni correction.
 	#' @param dat_out logical; if TRUE, export MCMC iterations and other parameters in the \code{dat} component.
 	#' @param outcome_na Method for handling any NA values in the outcome vec. 'remove' removes rows with NA outcomes while 'set0' keeps the row and sets the outcome to 0.
 	#' @param subset_na Method for handling any NA subset values. 'remove' removes rows with NA subset values while 'category' makes a new subset category (coded as 99) for NA values.
 	#' @param cat_na Method for handling any NA values in the categorical risk adjusters. 'remove' removes rows with NA values while 'category' makes a new category (coded as 99) for NA catorical risk adjusters.
-	#' @param cont_na Method for handling any NA values in the continous risk adjusters. 'remove' removes rows with NA values while 'median' replaces NA with the median value of the risk adjuster. 
+	#' @param cont_na Method for handling any NA values in the continous risk adjusters. 'remove' removes rows with NA values while 'median' replaces NA with the median value of the risk adjuster.
 	#' @return
 	#'	Returns a large list with the following components:
 	#'
@@ -74,8 +74,8 @@ fitBabyMonitor = function(minimal_data,
                           subset_na = 'category',
                           cat_na = 'category',
                           cont_na = 'median',
+						  score_type = 'stat_z_scaled',
                           dat_out = FALSE){
-	
 
   dat = parseMinimalData(minimal_data, num_cat, num_cont,
                                       subset = subset, outcome_na = outcome_na, subset_na = subset_na, cat_na = cat_na, cont_na = cont_na, n_cutoff = n_cutoff)
@@ -85,13 +85,14 @@ fitBabyMonitor = function(minimal_data,
   p_subset = partitionSummary(dat$y, dat$subset)
   p_inst_subset = NULL
   if (subset){p_inst_subset = partitionSummary(dat$y, dat$inst, dat$subset_vec)} #To save time, don't always compute
-
+  
   #Build model additively
   model_mat_cat = modelMatrix(dat$cat_var_mat, interactions = TRUE)
   model_mat_cont = modelMatrix(dat$cont_var_mat)
   model_mat = cbind( rep(1, dat$N), model_mat_cat, model_mat_cont)
   if (num_cat == 0){  model_mat = cbind( rep(1, dat$N), model_mat_cont)} #Not sure why cbind doesn't handle the NULL well..
-
+  
+  
   #Build prior variance vector
   prior_var_cat = NULL
   if (num_cat > 0){
@@ -105,13 +106,13 @@ fitBabyMonitor = function(minimal_data,
   }
   prior_var_vec = c(var_intercept, prior_var_cat, prior_var_cont)
 
-  
+
   #Fit probit regression
   mcmc_iters = probitFit(dat$y, model_mat, prior_var_vec,
                          iters = iters + burn_in)[-(1:burn_in),  ]
 
   #MCMC matrix of individual level pobabilities
-  p_i_mat = pnorm(as.matrix(tcrossprod(model_mat, mcmc_iters))) 
+  p_i_mat = pnorm(as.matrix(tcrossprod(model_mat, mcmc_iters)))
 
   #Extract posterior rowwise mean, implied observational variance, and rowwise variance
   p_i_vec = apply(p_i_mat, 1, mean)
@@ -119,7 +120,7 @@ fitBabyMonitor = function(minimal_data,
   pq_i_vec = p_i_vec * (1-p_i_vec)
   p_i_overall_var_vec =  pq_i_vec + p_i_var_vec #Law of total variance
   rm(p_i_mat) #Remove to save space
-  
+
   #Compute z_star based on Bonferonni correction
   dat$z_star = computeZstar(alpha, dat$p, bonferroni)
 
@@ -131,6 +132,7 @@ fitBabyMonitor = function(minimal_data,
   #Build human readable data.frames
   summaryMat = function(part_dat, dgh_dat){
     #Build summary mat
+    #TODO incorperate into checks to ensure the format of returner is consitsant
     out = cbind(part_dat$part_mat,
           data.frame(n = part_dat$n, o_mean = part_dat$o_mean, effect_est = dgh_dat$D,
                       effect_lower = dgh_dat$lower, effect_upper = dgh_dat$upper,
@@ -140,23 +142,23 @@ fitBabyMonitor = function(minimal_data,
   inst_mat = summaryMat(p_inst, inst_effects)
   subset_mat = summaryMat(p_subset, subset_effects)
   inst_subset_mat = summaryMat(p_inst_subset, subset_inst_effects)
-	inst_mat = cbind(inst_mat, toScore(inst_mat, dat$z_star))
+	inst_mat = cbind(inst_mat, toScore(inst_mat, dat$z_star, score_type = score_type))
 	names(inst_mat)[1] = 'inst'
 	subset_mat_baseline = inst_subset_mat_baseline = NULL
   if(subset){
 	names(subset_mat)[1] = 'subset'
 	  z_star_subset = computeZstar(alpha, length(unique(dat$subset_vec)), bonferroni)
 	  z_star_inst_subset = computeZstar(alpha, dim(inst_subset_mat)[1], bonferroni)
-	  
+
 	   subset_mat = cbind(subset_mat, toScore(subset_mat, z_star_subset))
-	  
+
 	  inst_subset_mat = cbind(inst_subset_mat, toScore(inst_subset_mat,z_star_inst_subset))
 	  names(inst_subset_mat)[1:2] = c('inst','subset')
 
 	  #Subset baseline coding
 	  subset_mat_baseline = toBaseline(subset_mat)
-		
-	#Add in inst_baseline 
+
+	#Add in inst_baseline
 	inst_subset_list_baseline = lapply(unique(inst_subset_mat$inst),
 		function(inst) toBaseline(inst_subset_mat[inst_subset_mat$inst == inst,  ], inst=TRUE))
 	inst_subset_mat_baseline = do.call('rbind', inst_subset_list_baseline)

@@ -1,3 +1,7 @@
+  idStr = function(x){ #Make sure id (potentially two columns) is a vector
+		as.character(paste(x, collapse = '-'))
+	  }
+
 
 correctInf = function(mat){
 	#Convert Inf values to 0
@@ -19,21 +23,7 @@ linCholSolver = function(R, y){
 		return(backsolve(R, q))
 }
 
-  toScore = function(summary_dat, z_star){
-  #This is just a linear transform, mean and variance transform as well
-  #Requires the effect be computed with an estimate and an SE
-  if(is.null(summary_dat)){return(NULL)}
-	y_bar = mean(summary_dat$effect_est)
-	sd_obs = sd(summary_dat$effect_est)
-	#est = (summary_dat$effect_est - y_bar) / sd_obs
-	est = summary_dat$effect_est / sd_obs
-	s = summary_dat$effect_se / sd_obs
-	return(
-		data.frame( score_est = est, 
-	score_lower = est - z_star * s, score_upper = est + z_star * s,
-	score_se = s)
-	)		
-  }
+
   
    computeZstar = function(alpha, p, bonferroni = TRUE){
 		if (!bonferroni){p = 1}

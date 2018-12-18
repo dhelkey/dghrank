@@ -1,0 +1,42 @@
+#TODO TODAY
+CLEAN ROOM
+visualizeReturner()
+get null simulations running to append to existing file 
+
+
+
+
+View methods for the different graphs
+
+##This is the ideal case for GGplot actually....]
+#Or make our own....
+
+plot institutions
+plot instutions according to another order...
+
+
+
+
+
+##Try adding another score that is each dist transformed into a z-score, in such a way that inference is preserved...
+
+
+
+plot est, score
+composite
+subset?
+
+only show significant scores
+
+
+
+add - labels
+
+
+
+input returner
+choose inst_mat,
+choose score/est (if no est, throw error)
+#grab returner[[mat]]
+
+
