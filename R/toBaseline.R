@@ -9,7 +9,7 @@ toBaseline = function(data_frame, inst = FALSE){
 		names(df) = return_cols
 		return(df)
 	}
-	#If it is present, than change the relevent columns
+	#If it is present, then change the relevent columns
 	sub_effect = data_frame$effect_est[base_index]
 	sub_score = data_frame$score_est[base_index]
 	

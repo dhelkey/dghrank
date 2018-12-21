@@ -7,9 +7,9 @@
 fitBabyMonitor(minimal_data, num_cat, num_cont, subset = FALSE,
   subset_base_catgory = 1, var_intercept = 40, var_cat = 10,
   var_cat_interaction = 10, var_cont = 10, iters = 100, burn_in = 100,
-  alpha = 0.05, n_cutoff = 5, bonferroni = TRUE, outcome_na = "set0",
-  subset_na = "category", cat_na = "category", cont_na = "median",
-  dat_out = FALSE)
+  alpha = 0.01, n_cutoff = 5, bonferroni = TRUE, t_scores = TRUE,
+  outcome_na = "set0", subset_na = "category", cat_na = "category",
+  cont_na = "median", score_type = "stat_z_scaled", dat_out = FALSE)
 }
 \arguments{
 \item{minimal_data}{Data_frame with a particular format:
@@ -45,6 +45,8 @@ Next: num_cont columns of continuous variables (num_cont can equal 0)}
 \item{alpha}{scalar in (0,1). Statistical signifiance threshold. Posterior (1-alpha)\% intervals are generated.}
 
 \item{bonferroni}{logical; if TRUE, posterior intervals are widened with the Bonferroni correction.}
+
+\item{t_scores}{logical; if TRUE, posterior intervals confidence intervals constructed with the student t-distribution. If FALSE, z-scores are used.}
 
 \item{outcome_na}{Method for handling any NA values in the outcome vec. 'remove' removes rows with NA outcomes while 'set0' keeps the row and sets the outcome to 0.}
 

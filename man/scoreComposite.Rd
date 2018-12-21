@@ -14,5 +14,5 @@ scoreComposite(returner_list, alpha = 0.05, bonferroni = TRUE)
 \item{returner_list:}{List of outputs from fitBabyMonitor(), one element for each performance indicator.}
 }
 \description{
-\code{scoreComposite} generates composite Baby-MONITOR scores from analysis of multiple performance indicators.
+\code{scoreComposite} generates composite Baby-MONITOR scores  after analysis using fitBabyMonitor() on multiple performance indicators.
 }

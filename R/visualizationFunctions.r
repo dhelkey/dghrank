@@ -60,7 +60,6 @@ visualizeReturner = function(returner, mat = 'inst_mat',
   box()
   axis(2)
   axis(1, at = x, labels=plot_names, las=2, cex.axis = 0.65)
-  print(plot_names)
   mtext(side = 2, line = 2, ylab)
   graphics::segments(x0=x, x1=x,y0 = lower, y1 = upper, lwd = lwd, ...)
   lower_indices = upper < 0
