@@ -1,12 +1,15 @@
 #' Compute composite Baby-MONITOR scores
 #'
-#' \code{scoreComposite} generates composite Baby-MONITOR scores  after analysis using fitBabyMonitor() on multiple performance indicators. 
+#' \code{scoreComposite} generates composite Baby-MONITOR scores  after analysis using fitBabyMonitor() on multiple performance indicators. If t_scores = TRUE, uses Welch-Satterthwaite to calculate approximation to the effective degrees of freedom.
 #'
 #' @param returner_list: List of outputs from fitBabyMonitor(), one element for each performance indicator.
 #'
 #' @inheritParams fitBabyMonitor
-scoreComposite = function(returner_list, alpha = 0.05, bonferroni = TRUE){
+scoreComposite = function(returner_list, alpha = 0.01, bonferroni = TRUE, t_scores = TRUE){
   #Either ALL of the inputs are subset analyses, or not
+  
+  dat = NULL
+  
   subset = all( sapply(returner_list, function(x) x$dat$subset))
   
   returner_out = list() #Generate data for all tables in a loop
@@ -48,6 +51,7 @@ scoreComposite = function(returner_list, alpha = 0.05, bonferroni = TRUE){
 		full_id_mat = rbind(full_id_mat, parsed_temp$id_mat)
 		parsed_temp$score_est = r[[mat]]$score_est
 		parsed_temp$score_se = r[[mat]]$score_se
+		parsed_temp$n = r[[mat]]$n
 		parsed_list[[i]] = parsed_temp
 			  }
 
@@ -67,30 +71,39 @@ scoreComposite = function(returner_list, alpha = 0.05, bonferroni = TRUE){
 	  P = length(full_id_vec) 
 	  
 	  #Put data in a matrix for easy score computation
-	  score_est_mat = score_se_mat = score_present_mat = matrix(NA, nrow = P, ncol = n_scores)
+	  score_est_mat = score_se_mat =  n_mat = matrix(NA, nrow = P, ncol = n_scores)
 	  for (i in 1:n_scores) {
 		r = parsed_list[[i]]
 		id_str = apply(r$id_mat, 1, idStr)
 		indices = match(id_str, full_id_vec)
 		score_est_mat[indices, i] = r$score_est
 		score_se_mat[indices, i] = r$score_se	
-		score_present_mat[indices, i] = 1
+		n_mat[indices, i] = r$n
 	  }
 
 	  #Create variance inflated score by multiplying the average by sqrt(n_scores)
-	  n_components = apply(score_present_mat, 1, sum, na.rm = TRUE)
-	  score_est = apply(score_est_mat, 1, sum, na.rm = TRUE) / sqrt(n_components)
+	  n_components = rowSums(!is.na(score_est_mat), na.rm = TRUE)
+	  score_est = rowSums(score_est_mat, na.rm = TRUE) / sqrt(n_components)
 	  score_se = apply(score_se_mat, 1,function(x) sqrt(sum(x^2, na.rm =TRUE))) / sqrt(n_components)
-
-	  #Compute upper and lower from est and SE
-	  z_star =  computeZstar(alpha, P, bonferroni)
-	  score_lower = score_est - z_star * score_se
-	  score_upper = score_est + z_star * score_se
-
+	  
+	  #Compute approximate degrees of freedom w/ Welch-Satterthwaite
+		k_vec = sqrt(n_components) /
+			n_components #Equal weights within institution, but differing without
+	df_mat = n_mat - 1
+	df_mat[df_mat == 0] = 1
+	
+	ws_approximate_df = rowSums(k_vec * score_se_mat^2, na.rm = TRUE)^2 /
+		rowSums(  (k_vec * score_se_mat^2)^2 / (df_mat) ,na.rm = TRUE)
+	ws_approximate_df[is.nan(ws_approximate_df)] = 0
+	  
 	  #Add table to the output list
-	  out_mat = data.frame(cbind(full_id_mat, score_est, score_se, score_lower, score_upper, n_components))
+	  out_mat = data.frame(cbind(full_id_mat, score_est, score_se, n_components, ws_approximate_df))
+	  out_mat$total_n = rowSums(n_mat, na.rm = TRUE)
+	  out_mat = addIntervals(out_mat, composite = TRUE, alpha = alpha, bonferroni = bonferroni, t_scores = t_scores)
+	  
 	  names(out_mat)[1:n_id_cols] = id_cols
 		  returner_out[[mat]] = out_mat
 	}
+	returner_out$dat = dat
 	return(returner_out)
 }

@@ -10,6 +10,7 @@ partitionSummary = function(outcome, part1, part2 = NULL){
   #This function doesnt handle names that well,
   # and the (few) ways we partition the data must be mmanually labeled
   #Can optionally add dg pcf and group vecs to obtain Draper-Gittoes scores
+  #Optimized by Lucy Greenberg
 if (is.null(part1)){return(NULL)}
   #Both vectors need to be partitions
  part1 = as.factor(part1)
@@ -18,7 +19,6 @@ if (is.null(part1)){return(NULL)}
    part2 = as.factor(part2)
    }
    
-
   #If two partition vectors specified, run through data
   # and list all combinations of levels (e.g. inst-subst)
   if (is.null(part2)){
@@ -62,8 +62,15 @@ if (is.null(part1)){return(NULL)}
   ind_mat[cbind(1:n, as.numeric(part_vec))] = 1
 
   #Statistics for each partition
-  n_vec = sapply(levels_out, function(li) sum(part_vec == li))
-  o_mean = sapply(levels_out, function(li) mean(outcome[part_vec == li]))
+  # n_vec = sapply(levels_out, function(li) sum(part_vec == li))
+  # o_mean = sapply(levels_out, function(li) mean(outcome[part_vec == li]))
+  temp <- data.frame(table(part_vec))
+      n_vec<-temp[,2]
+      names(n_vec)<-temp[,1]
+      
+      temp2<-aggregate(outcome,by=list(part_vec),mean)
+      o_mean<-temp2[,2]
+      names(o_mean)<-temp2[,1]
 
   return(list(levels_out = levels_out,
               n_vec = c(n_vec),
