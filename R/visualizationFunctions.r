@@ -1,3 +1,23 @@
+Eps = function(path,...){
+  #Wrapper to generate EPS files
+
+  #For now, generate PNGs
+  full_path = paste0(path,'.png')
+  png(full_path,height = 800,width = 800,pointsize = 20,...)
+
+
+
+  # full_path = paste0(path,'.eps')  #TODO make saveFig(path, 'jpg',...) function w/ sensable defaults, easiy to quit out of, lookup w/ fuzzy search (ideally)
+  # setEPS()
+  # postscript(path,...)
+}
+
+
+Png = function(path,height = 800,width = 800,pointsize = 12){
+  #Wrapper for png()
+  png(path, width = width, height = height, pointsize = pointsize)
+}
+
 visualizeReturner = function(returner, mat = 'inst_mat',
                   type = 'score', only_significant = FALSE,
                   plot_order = 'effect', xlab = '', ylab = '',lwd = 1, ...){ #given/ranked, some other other order, 'sorted'
@@ -28,9 +48,9 @@ visualizeReturner = function(returner, mat = 'inst_mat',
   }
 
   #ID vars
-  plot_vars = mat_use[ ,cols] #Subse 
+  plot_vars = mat_use[ ,cols] #Subse
 
-  #First order, then subset 
+  #First order, then subset
   if (plot_order == 'ranked' ){
     order_vec = order(plot_vars[ ,1])
   } else if (plot_order == 'source'){
@@ -38,7 +58,7 @@ visualizeReturner = function(returner, mat = 'inst_mat',
   } else if (plot_order == 'effect'){
 	order_vec = order(mat_use$effect_est)
   }
-  
+
   indices = is.finite(plot_vars[ ,1])
   if (only_significant){
 	indices = plot_vars[ ,2] > 0 | plot_vars[ ,3] < 0
@@ -69,11 +89,38 @@ visualizeReturner = function(returner, mat = 'inst_mat',
   graphics::segments(x0=x[upper_indices], x1=x[upper_indices],
                      y0 = lower[upper_indices], y1 = upper[upper_indices],  col = 'blue', lwd = lwd * 1.5, ...)
   graphics::abline(h = 0, lty = 3)
-  
+
   #Order and subset? if necesasary
   #Here is where we would extrreact only_significatnt
   return(0)
 }
+
+
+Cplot = function(x,y,xlab = 'x', ylab = 'y',...){
+
+	par(mar = c(3,3,1,1))
+	par(mfrow = c(1,2))
+  plot(x,y,xlab = '', ylab = '', ...)
+  mtext(side = 1, line = 2, xlab)
+  mtext(side = 2, line = 2, ylab)
+  abline(0,1, lwd = 2, col = 'red')
+
+  legend('bottomright', c(paste('Correlation: ', cor(x,y))), bty = 'n')
+
+  histSum(y - x, main = '', ylab = '')
+
+}
+
+histSum = function(x, ...){
+	hist(x, lwd = 2,  ...)
+	# text(mean(x), 0, paste0('Mean: ', round(mean(x),3)), pos = 3, offset = 2)
+	# text(mean(x), 0, paste0('SD: ', round(sd(x),3)), pos = 3, offset = 1)
+
+	legend_text = c(paste0('Mean: ', round(mean(x),3)),
+					paste0('SD: ', round(sd(x),3)))
+	legend('topright', legend_text, bty = 'n')
+}
+
 
 
 
@@ -103,8 +150,3 @@ visualizeReturner = function(returner, mat = 'inst_mat',
 # }
 
 
-histSum = function(x, ...){
-	hist(x, lwd = 2,  ...)
-	text(mean(x), 0, paste0('Mean: ', round(mean(x),3)), pos = 3, offset = 2)
-	text(mean(x), 0, paste0('SD: ', round(sd(x),3)), pos = 3, offset = 1)
-}

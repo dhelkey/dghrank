@@ -58,8 +58,8 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont,
                           subset = FALSE, subset_base_catgory = 1,
                           var_intercept = 40, var_cat = 10,
                           var_cat_interaction = 10, var_cont = 10,
-                          iters = 100, burn_in = 100,
-                          n_cutoff = 5, alpha = 0.01,
+                          iters = 500, burn_in = 25,
+                          n_cutoff = 1, alpha = 0.01,
                           bonferroni = TRUE, t_scores = TRUE,
                           outcome_na = 'set0', subset_na = 'category',
                           cat_na = 'category', cont_na = 'median',
@@ -70,20 +70,23 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont,
 					subset_na = subset_na, cat_na = cat_na,
 					 cont_na = cont_na, n_cutoff = n_cutoff)
 
-					
-					 
+
+
   #Partition data by institution, subset, and institution-subset
   p_inst = partitionSummary(dat$y, dat$inst_vec)
   p_subset = partitionSummary(dat$y, dat$subset)
   p_inst_subset = NULL
   if (subset){p_inst_subset = partitionSummary(dat$y, dat$inst, dat$subset_vec)} #To save time, don't always compute
-  
+
   #Additive model for risk adjusters: (intercept + categorical variables w/ interactions + continious variables)
   model_mat_cat = modelMatrix(dat$cat_var_mat, interactions = TRUE)
   model_mat_cont = modelMatrix(dat$cont_var_mat)
   model_mat = cbind( rep(1, dat$N), model_mat_cat, model_mat_cont)
-  if (num_cat == 0){  model_mat = cbind( rep(1, dat$N), model_mat_cont)}  
-  
+  if (num_cat == 0){  model_mat = cbind( rep(1, dat$N), model_mat_cont)}
+
+  dat$model_mat_cat = model_mat_cat
+  dat$model_mat_cont = model_mat_cont
+
   #Prior variance vector
   prior_var_cat = NULL
   if (num_cat > 0){
@@ -120,18 +123,18 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont,
   scores_inst = toScore(dgh_inst$D, dgh_inst$S)
   scores_subset = toScore(dgh_subset$D, dgh_subset$S)
   scores_inst_subset = toScore(dgh_inst_subset$D, dgh_inst_subset$S)
-  
+
   summaryMat = function(part_dat,dgh_mat, score_mat){
 	#Combine data into human readable data.frames
 	#Choose a score type
 
 	#If null, terminate early
 	if (is.null(dgh_mat)){return(NULL)}
-	
+
 	#Extract lables, counts, and observed rate
 	out_mat = cbind(part_dat$part_mat,
 		data.frame(n = part_dat$n, o_mean = part_dat$o_mean))
-	
+
 	#Extract effect and SE
 	effect_est = dgh_mat$D; effect_se =  dgh_mat$S
 
@@ -140,7 +143,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont,
 	'effect_scaled'= list(score_mat$est_effect_scaled,score_mat$s_effect_scale),
 	'stat_z'= list(score_mat$est_stat_z,score_mat$s_stat_z),
 	'stat_z_scaled'= list(score_mat$est_stat_z_scaled, score_mat$s_stat_z_scaled)
-	)	
+	)
 	score_est = score_list[[1]]
 	score_se = score_list[[2]]
 
@@ -152,24 +155,24 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont,
 			score_se = score_se,
 			stat_z = dgh_mat$Z)))
 	}
-  
+
   	#Summary data
   	inst_mat = summaryMat(p_inst, dgh_inst, scores_inst)
-	names(inst_mat)[1] = 'inst' 
+	names(inst_mat)[1] = 'inst'
  	subset_mat = summaryMat(p_subset, dgh_subset, scores_subset)
  	inst_subset_mat = summaryMat(p_inst_subset, dgh_inst_subset,
 		scores_inst_subset)
  	 if (subset){
   		names(subset_mat)[1] = 'subset'
   		names(inst_subset_mat)[1:2] = c('inst','subset')
-	} 
+	}
 
  	#Create baseline values w/ toBaseline
 	subset_mat_baseline = toBaseline(subset_mat)
   	inst_subset_list_baseline = lapply(unique(inst_subset_mat$inst),
 		function(inst) toBaseline(inst_subset_mat[inst_subset_mat$inst == inst,  ], inst=TRUE))
 	inst_subset_mat_baseline = do.call('rbind', inst_subset_list_baseline)
-	
+
 	##Add confidence intervals
 	aI = function(mat){#Wrapper for add intervals to include all options
 	addIntervals(mat, bonferroni = bonferroni, t_scores = t_scores, alpha = alpha)
@@ -179,7 +182,7 @@ fitBabyMonitor = function(minimal_data, num_cat, num_cont,
 	subset_mat_baseline = aI(subset_mat_baseline)
 	inst_subset_mat_nobaseline = aI(inst_subset_mat)
 	inst_subset_mat_baseline = aI(inst_subset_mat_baseline)
-	
+
 	if (!dat_out){#Remove saved variables to save storage space.
 	  dat = list()
 	} else{#If dat_out, export variables

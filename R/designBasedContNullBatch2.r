@@ -4,10 +4,6 @@ designBasedContNullBatch2 = function(gamma_vec, outcome_mat, pcf_cat_vec, instid
 	##Computes D-G z scores less cost prohabitivly....
 	#There is a lot of redundancy in the computation
 
-	##TODO add tests to make sure weird ordering isnt hurting anything
-
-	##TODO make sure to test that it will work with an input vector...
-
 	###Draper Gittoes
 	#M student types - pcf categories
 	#N universities

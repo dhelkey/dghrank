@@ -19,6 +19,33 @@
     }
 
 	
+simulateDesignBased = function(outcome_vec, pcf_vec, iters = 10, 
+		min_p = 0.01, max_p = 0.99){
+		
+	N = length(outcome_vec)
+		
+	pcf_vec = as.factor(pcf_vec)
+
+	cat_probs = sapply(levels(pcf_vec),
+			function(level) mean(outcome_vec[pcf_vec == level]))
+	cat_probs[cat_probs == 1] = max_p
+	cat_probs[cat_probs == 0] = min_p
+
+	prob_vec = pcf_vec
+	levels(prob_vec) = cat_probs
+	prob_vec = as.numeric(as.character(prob_vec))
+
+	null_mat = matrix(NA, nrow = N, ncol = iters)
+
+	#Generate in a loop
+	for (i in 1:iters){
+	  null_mat[ ,i] = rbinom(N, 1, prob_vec)
+	}
+		return(list(data = null_mat, prob = prob_vec))
+}
+	
+	
+	
 generateNullData = function(outcome_vec, pcf_vec, iters = 10,
 	emperical_dist = FALSE){
   #Generate Null data for a continious outcome vec
@@ -66,7 +93,7 @@ generateNullData = function(outcome_vec, pcf_vec, iters = 10,
 }
 
 ##Test computeNullBlock (TODO test against designBasedCont)
-computeNullBlock = function(simulated_data, pcf_vec, inst_vec, gamma_vec){
+computeNullBlock = function(simulated_data, pcf_vec, inst_vec, gamma_vec, fun = designBasedContNull){
   #simulated_data <N x iters>
   #inst_vec <N x 1>: p institutions
   #pcf_vec <N x 1>
@@ -75,10 +102,12 @@ computeNullBlock = function(simulated_data, pcf_vec, inst_vec, gamma_vec){
 
   out_array = NULL
   for (i in 1:iters){
-    out_array = abind(out_array,
-                      designBasedContNull(gamma_vec, simulated_data[ ,i], pcf_vec, inst_vec),
+    out_array = abind::abind(out_array,
+                      fun(gamma_vec, simulated_data[ ,i], pcf_vec, inst_vec),
                       along = 3)
   }
   return(out_array)
   #Returns array <P x n_gamma x iters)
 }
+
+

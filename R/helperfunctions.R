@@ -1,8 +1,18 @@
   idStr = function(x){ #Make sure id (potentially two columns) is a vector
 		as.character(paste(x, collapse = '-'))
 	  }
-
-
+	  
+	  
+toQuantiles = function(x, levels = 4){
+	#Recode a numeric variable as a catgorical w/ 4 levels
+	if (length(x) == 0){return(x)}
+  q_vec = quantile(x, probs = seq(0, 1, length = levels + 1), na.rm = TRUE)
+  q_vec[1] = -Inf
+  return(as.factor(cut(x, q_vec, labels = 1:levels)))
+}
+	  
+	  
+	  
 correctInf = function(mat){
 	#Convert Inf values to 0
 	mat[is.infinite(mat)] = 0
